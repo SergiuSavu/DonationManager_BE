@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -24,7 +26,9 @@ public class Role {
 	private ERole name;
 
 	@ElementCollection(targetClass = PermissionEnum.class)
-	@CollectionTable(name = "role_permission", joinColumns = @JoinColumn(name = "idPermission"))
+	@CollectionTable(
+			name = "role_permission",
+			joinColumns = @JoinColumn(name = "idPermission"))
 	@Enumerated(EnumType.STRING)
 	@Column(name = "id")
 	private Set<PermissionEnum> permissions = new HashSet<>();
