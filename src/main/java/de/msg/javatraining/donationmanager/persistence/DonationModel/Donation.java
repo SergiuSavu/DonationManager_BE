@@ -1,5 +1,8 @@
-package de.msg.javatraining.donationmanager.persistence.model;
+package de.msg.javatraining.donationmanager.persistence.DonationModel;
 
+import de.msg.javatraining.donationmanager.persistence.CampaignModel.Campaign;
+import de.msg.javatraining.donationmanager.persistence.model.Donator;
+import de.msg.javatraining.donationmanager.persistence.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,9 +22,16 @@ public class Donation {
 
     private float amount;
     private String currency; // maybe switch to another data type? Java has currency class
-    private int idCampaign;
-    private int idDonator; // who donated
-    private int idCreatedBy; // user which created the donation
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Campaign campaign; //campaignId
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Donator donator; // who donated, donatorId
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User user; // user which created the donation, createdById
+
     private Date approveDate;
     private String notes;
     private Date createdDate;
