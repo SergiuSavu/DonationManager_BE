@@ -1,8 +1,19 @@
 package de.msg.javatraining.donationmanager.persistence.CampaignModel;
 
 
+<<<<<<< HEAD
 import jakarta.persistence.*;
 
+=======
+import de.msg.javatraining.donationmanager.persistence.DonationModel.Donation;
+import de.msg.javatraining.donationmanager.persistence.model.User;
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
+>>>>>>> 09e7e11 (Donation CRUD - working. Small changes to Capmaign, Role & User. UNIDIRECTIONAL BINDING.)
 
 @Entity
 @Table(	name = "campaign",

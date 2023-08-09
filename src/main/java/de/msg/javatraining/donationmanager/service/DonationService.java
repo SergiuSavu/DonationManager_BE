@@ -1,6 +1,9 @@
 package de.msg.javatraining.donationmanager.service;
 
+import de.msg.javatraining.donationmanager.controller.dto.DonationDTO;
+import de.msg.javatraining.donationmanager.controller.dto.UserDTO;
 import de.msg.javatraining.donationmanager.persistence.DonationModel.Donation;
+import de.msg.javatraining.donationmanager.persistence.model.User;
 import de.msg.javatraining.donationmanager.persistence.repository.DonationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
