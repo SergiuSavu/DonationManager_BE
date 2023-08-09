@@ -25,7 +25,6 @@ public class Role {
 	@Column(length = 20)
 	private ERole name;
 
-
 	@ElementCollection(targetClass = PermissionEnum.class)
 	@CollectionTable(
 			name = "role_permission",
