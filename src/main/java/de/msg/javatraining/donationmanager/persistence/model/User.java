@@ -1,5 +1,6 @@
 package de.msg.javatraining.donationmanager.persistence.model;
 
+import de.msg.javatraining.donationmanager.persistence.CampaignModel.Campaign;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
