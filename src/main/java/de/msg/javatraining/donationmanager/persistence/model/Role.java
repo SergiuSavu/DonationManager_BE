@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -24,12 +26,12 @@ public class Role {
 	private ERole name;
 
 
-	@ManyToMany(fetch = FetchType.EAGER)
-	@JoinTable(
+	@ElementCollection(targetClass = PermissionEnum.class)
+	@CollectionTable(
 			name = "role_permission",
-			joinColumns = @JoinColumn(name = "idRole"),
-			inverseJoinColumns = @JoinColumn(name = "idPermission")
-	)
+			joinColumns = @JoinColumn(name = "idPermission"))
+	@Enumerated(EnumType.STRING)
+	@Column(name = "id")
 	private Set<PermissionEnum> permissions = new HashSet<>();
 
 }
