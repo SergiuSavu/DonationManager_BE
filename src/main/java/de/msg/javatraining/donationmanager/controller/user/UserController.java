@@ -1,15 +1,13 @@
 package de.msg.javatraining.donationmanager.controller.user;
 
 import de.msg.javatraining.donationmanager.controller.dto.UserDTO;
-import de.msg.javatraining.donationmanager.persistence.model.User;
+import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.service.RefreshTokenService;
-import de.msg.javatraining.donationmanager.service.UserService;
+import de.msg.javatraining.donationmanager.service.userService.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
@@ -22,7 +20,7 @@ public class UserController {
     private RefreshTokenService refreshTokenService;
 
     @GetMapping("/all")
-    public List<User> getAllUsers(){
+    public List<UserDTO> getAllUsers(){
        return userService.getAllUsers();
     }
 

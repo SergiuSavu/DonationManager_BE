@@ -1,8 +1,8 @@
-package de.msg.javatraining.donationmanager.service;
+package de.msg.javatraining.donationmanager.service.userDetailsService;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import de.msg.javatraining.donationmanager.persistence.model.User;
+import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

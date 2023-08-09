@@ -1,13 +1,7 @@
 package de.msg.javatraining.donationmanager.persistence.CampaignModel;
 
 
-import de.msg.javatraining.donationmanager.persistence.DonationModel.Donation;
-import de.msg.javatraining.donationmanager.persistence.model.User;
 import jakarta.persistence.*;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 
 
 @Entity

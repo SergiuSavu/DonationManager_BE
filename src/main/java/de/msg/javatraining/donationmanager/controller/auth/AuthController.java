@@ -5,7 +5,7 @@ import de.msg.javatraining.donationmanager.config.security.JwtUtils;
 import de.msg.javatraining.donationmanager.persistence.repository.RoleRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
 import de.msg.javatraining.donationmanager.service.RefreshTokenService;
-import de.msg.javatraining.donationmanager.service.UserDetailsImpl;
+import de.msg.javatraining.donationmanager.service.userDetailsService.UserDetailsImpl;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
