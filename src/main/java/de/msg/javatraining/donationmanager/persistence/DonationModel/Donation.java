@@ -23,18 +23,23 @@ public class Donation {
     private float amount;
     private String currency; // maybe switch to another data type? Java has currency class
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "campaign")
     private Campaign campaign; //campaignId
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "donator")
     private Donator donator; // who donated, donatorId
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private User user; // user which created the donation, createdById
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "createdBy")
+    private User createdBy; // user which created the donation, createdById
 
     private Date approveDate;
     private String notes;
     private Date createdDate;
-    private int approvedBy; // who checked and approved the donation
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "approvedBy")
+    private User approvedBy; // who checked and approved the donation
 }

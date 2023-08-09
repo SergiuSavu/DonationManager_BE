@@ -1,9 +1,11 @@
 package de.msg.javatraining.donationmanager.persistence.CampaignModel;
 
 
+import de.msg.javatraining.donationmanager.persistence.DonationModel.Donation;
 import de.msg.javatraining.donationmanager.persistence.model.User;
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,18 +23,11 @@ public class Campaign {
     private String name;
     private String purpose;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(	name = "user_campaign",
-            joinColumns = @JoinColumn(name = "campaign_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private Set<User> users = new HashSet<>();
-
     public Campaign(){}
 
-    public Campaign(String name, String purpose, Set<User> users) {
+    public Campaign(String name, String purpose) {
         this.name = name;
         this.purpose = purpose;
-        this.users = users;
     }
 
     public Long getId() {
@@ -59,11 +54,4 @@ public class Campaign {
         this.purpose = purpose;
     }
 
-    public Set<User> getUsers() {
-        return users;
-    }
-
-    public void setUsers(Set<User> users) {
-        this.users = users;
-    }
 }

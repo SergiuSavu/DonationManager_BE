@@ -23,13 +23,10 @@ public class Role {
 	@Column(length = 20)
 	private ERole name;
 
-
-	@ManyToMany(fetch = FetchType.EAGER)
-	@JoinTable(
-			name = "role_permission",
-			joinColumns = @JoinColumn(name = "idRole"),
-			inverseJoinColumns = @JoinColumn(name = "idPermission")
-	)
+	@ElementCollection(targetClass = PermissionEnum.class)
+	@CollectionTable(name = "role_permission", joinColumns = @JoinColumn(name = "idPermission"))
+	@Enumerated(EnumType.STRING)
+	@Column(name = "id")
 	private Set<PermissionEnum> permissions = new HashSet<>();
 
 }
