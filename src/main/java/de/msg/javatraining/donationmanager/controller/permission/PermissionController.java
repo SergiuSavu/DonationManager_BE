@@ -16,8 +16,8 @@ public class PermissionController {
     private PermissionService permissionService;
 
     @PostMapping("/{userId}/add")
-    public ResponseEntity<Void> addPermissionToUser(@PathVariable Long userId, @RequestBody PermissionEnum permission) {
-        boolean added = permissionService.addPermissionToUser(userId, permission);
+    public ResponseEntity<Void> addPermissionToUser(@PathVariable Long userIdADMIN, @PathVariable Long userIdTARGET, @RequestBody PermissionEnum permission) {
+        boolean added = permissionService.addPermissionToUser(userIdADMIN, userIdTARGET, permission);
 
         if (added) {
             return ResponseEntity.ok().build();
@@ -27,8 +27,8 @@ public class PermissionController {
     }
 
     @PostMapping("/{userId}/delete")
-    public ResponseEntity<Void> deletePermissionFromUser(@PathVariable Long userId, @RequestBody PermissionEnum permission) {
-        boolean deleted = permissionService.deletePermissionFromUser(userId, permission);
+    public ResponseEntity<Void> deletePermissionFromUser(@PathVariable Long userIdADMIN, @PathVariable Long userIdTARGET, @RequestBody PermissionEnum permission) {
+        boolean deleted = permissionService.deletePermissionFromUser(userIdADMIN, userIdTARGET, permission);
 
         if (deleted) {
             return ResponseEntity.ok().build();
