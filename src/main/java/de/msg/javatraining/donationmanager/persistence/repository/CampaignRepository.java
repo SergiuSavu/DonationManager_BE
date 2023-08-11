@@ -1,6 +1,6 @@
 package de.msg.javatraining.donationmanager.persistence.repository;
 
-import de.msg.javatraining.donationmanager.persistence.CampaignModel.Campaign;
+import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

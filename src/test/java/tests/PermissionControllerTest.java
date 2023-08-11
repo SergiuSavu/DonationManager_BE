@@ -1,3 +1,4 @@
+package tests;
 
 import de.msg.javatraining.donationmanager.controller.permission.PermissionController;
 import de.msg.javatraining.donationmanager.persistence.model.PermissionEnum;
