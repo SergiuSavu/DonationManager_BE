@@ -38,5 +38,15 @@ public enum PermissionEnum {
     }
 
     //INSERT INTO ROLE_PERMISSION (idRole, idPermission) values (2,PermissionEnum.PERMISSION_MANAGEMENT.getId())
+
+    public static PermissionEnum getById(int id) {
+        for (PermissionEnum permission : PermissionEnum.values()) {
+            if (permission.getId() == id) {
+                return permission;
+            }
+        }
+        return null; // No permission found with the given ID
+    }
+
 }
 
