@@ -12,5 +12,6 @@ import java.util.List;
 public interface CampaignRepository extends JpaRepository<Campaign, Long> {
 
     List<Campaign> findAll();
+    Campaign findCampaignByName(String name);
 
 }
