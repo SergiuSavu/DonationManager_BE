@@ -1,5 +1,6 @@
 package de.msg.javatraining.donationmanager.persistence.model;
 
+import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import jakarta.persistence.*;
 
 import java.time.Instant;

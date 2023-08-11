@@ -1,5 +1,6 @@
-package de.msg.javatraining.donationmanager.persistence.model;
+package de.msg.javatraining.donationmanager.persistence.model.user;
 
+import de.msg.javatraining.donationmanager.persistence.model.Role;
 import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -48,4 +49,6 @@ public class User {
 			inverseJoinColumns = @JoinColumn(name = "idCampaign")
 	)
 	private Set<Campaign> campaigns = new HashSet<>();
+
+
 }

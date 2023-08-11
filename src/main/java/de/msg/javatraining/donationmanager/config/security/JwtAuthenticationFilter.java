@@ -1,7 +1,7 @@
 package de.msg.javatraining.donationmanager.config.security;
 
 
-import de.msg.javatraining.donationmanager.service.UserDetailsServiceImpl;
+import de.msg.javatraining.donationmanager.service.userDetailsService.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
