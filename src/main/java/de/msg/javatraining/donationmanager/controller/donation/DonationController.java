@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/donation")
@@ -17,6 +18,11 @@ public class DonationController {
     @GetMapping()
     public List<Donation> getAllDonations() {
         return donationService.getAllDonations();
+    }
+
+    @GetMapping("/{id}")
+    public Optional<Donation> getDonation(@PathVariable("id") Long id) {
+        return donationService.getDonation(id);
     }
 
     @PostMapping()

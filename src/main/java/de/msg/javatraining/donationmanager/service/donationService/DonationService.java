@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class DonationService {
@@ -15,6 +16,10 @@ public class DonationService {
 
     public List<Donation> getAllDonations() {
         return donationRepository.findAll();
+    }
+
+    public Optional<Donation> getDonation(Long id) {
+        return donationRepository.findById(id);
     }
 
     public void createDonation(Donation donation) {
