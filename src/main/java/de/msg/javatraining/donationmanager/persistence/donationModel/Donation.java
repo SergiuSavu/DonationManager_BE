@@ -1,7 +1,7 @@
-package de.msg.javatraining.donationmanager.persistence.DonationModel;
+package de.msg.javatraining.donationmanager.persistence.donationModel;
 
-import de.msg.javatraining.donationmanager.persistence.CampaignModel.Campaign;
-import de.msg.javatraining.donationmanager.persistence.DonatorModel.Donator;
+import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
+import de.msg.javatraining.donationmanager.persistence.donatorModel.Donator;
 import de.msg.javatraining.donationmanager.persistence.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

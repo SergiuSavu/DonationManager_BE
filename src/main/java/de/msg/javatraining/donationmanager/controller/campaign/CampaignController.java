@@ -1,16 +1,15 @@
 package de.msg.javatraining.donationmanager.controller.campaign;
 
-import de.msg.javatraining.donationmanager.persistence.CampaignModel.Campaign;
+import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
 import de.msg.javatraining.donationmanager.service.campaignService.CampaignService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/campaign")
-public class campaignController {
+public class CampaignController {
 
     @Autowired
     private CampaignService campaignService;

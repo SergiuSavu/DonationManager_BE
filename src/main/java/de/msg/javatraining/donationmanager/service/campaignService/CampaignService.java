@@ -1,6 +1,6 @@
 package de.msg.javatraining.donationmanager.service.campaignService;
 
-import de.msg.javatraining.donationmanager.persistence.CampaignModel.Campaign;
+import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
 import de.msg.javatraining.donationmanager.persistence.repository.CampaignRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

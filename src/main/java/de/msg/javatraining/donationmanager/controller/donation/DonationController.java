@@ -1,7 +1,7 @@
 package de.msg.javatraining.donationmanager.controller.donation;
 
-import de.msg.javatraining.donationmanager.persistence.DonationModel.Donation;
-import de.msg.javatraining.donationmanager.service.DonationService;
+import de.msg.javatraining.donationmanager.persistence.donationModel.Donation;
+import de.msg.javatraining.donationmanager.service.donationService.DonationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
