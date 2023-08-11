@@ -1,7 +1,6 @@
 package de.msg.javatraining.donationmanager.persistence.repository;
 
-import de.msg.javatraining.donationmanager.persistence.DonationModel.Donation;
-import de.msg.javatraining.donationmanager.persistence.model.User;
+import de.msg.javatraining.donationmanager.persistence.donationModel.Donation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;

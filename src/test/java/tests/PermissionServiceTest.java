@@ -1,3 +1,5 @@
+package tests;
+
 import de.msg.javatraining.donationmanager.persistence.model.ERole;
 import de.msg.javatraining.donationmanager.persistence.model.PermissionEnum;
 import de.msg.javatraining.donationmanager.persistence.model.Role;

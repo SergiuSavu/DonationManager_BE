@@ -1,4 +1,4 @@
-package de.msg.javatraining.donationmanager.persistence.DonatorModel;
+package de.msg.javatraining.donationmanager.persistence.donatorModel;
 
 import jakarta.persistence.*;
 
