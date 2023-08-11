@@ -2,6 +2,7 @@ package de.msg.javatraining.donationmanager.service.donatorService;
 
 import de.msg.javatraining.donationmanager.persistence.donatorModel.Donator;
 import de.msg.javatraining.donationmanager.persistence.repository.DonatorRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,16 +19,23 @@ public class DonatorService {
     }
 
     public Optional<Donator> getDonatorById(Long id) {
-        return donatorRepository.findById(id);
+        return Optional.ofNullable(donatorRepository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("Donator with id: " + id + " does not exist.")));
     }
 
-    public void createDonator(Donator donator) {
-        donatorRepository.save(donator);
+
+    public Donator createDonator(Donator donator) {
+        return donatorRepository.save(donator);
     }
 
-    public void deleteDonatorById(Long id) {
+    public Donator deleteDonatorById(Long id) throws EntityNotFoundException {
+        Donator donator = donatorRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Donator with ID: " + id + " not found."));
+
         donatorRepository.deleteById(id);
+        return donator;
     }
+
 
     public void updateDonator(Long id, Donator updatedDonator) {
         Donator donator = donatorRepository.findById(id)
