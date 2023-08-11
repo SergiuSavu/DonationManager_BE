@@ -25,7 +25,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
@@ -39,6 +41,8 @@ public class WebSecurityConfig {
 
     @Autowired
     private UserDetailsService userDetailsService;
+    @Autowired
+    HandlerMappingIntrospector introspector;
 
 
     @Bean
@@ -50,7 +54,7 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(request -> request.requestMatchers("/auth/**", "/app/test/**", "/users/update/**").permitAll() //these requests are allowed
+                .authorizeHttpRequests(request -> request.requestMatchers(new MvcRequestMatcher(introspector,"/**")).permitAll() //these requests are allowed
                 .anyRequest().authenticated()) //any other request must be authenticated
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS)) // we don't want sessions
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
