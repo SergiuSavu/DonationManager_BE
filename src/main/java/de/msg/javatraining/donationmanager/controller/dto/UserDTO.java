@@ -1,13 +1,11 @@
 package de.msg.javatraining.donationmanager.controller.dto;
 
-import de.msg.javatraining.donationmanager.persistence.CampaignModel.Campaign;
+import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
 import de.msg.javatraining.donationmanager.persistence.model.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.stereotype.Component;
 
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 

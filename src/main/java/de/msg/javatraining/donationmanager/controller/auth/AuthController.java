@@ -6,6 +6,7 @@ import de.msg.javatraining.donationmanager.persistence.repository.RoleRepository
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
 import de.msg.javatraining.donationmanager.service.RefreshTokenService;
 import de.msg.javatraining.donationmanager.service.userDetailsService.UserDetailsImpl;
+import de.msg.javatraining.donationmanager.service.userService.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,9 +14,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,12 +55,26 @@ public class AuthController {
   @Autowired
   private RefreshTokenService refreshTokenService;
 
+  @Autowired
+  private UserService userService;
+
 
   @PostMapping("/login")
   public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
-
-    Authentication authentication = authenticationManager
-        .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+    Authentication authentication;
+    try {
+    authentication = authenticationManager
+            .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+    } catch (InternalAuthenticationServiceException | AccountStatusException var14) {
+      return new ResponseEntity<>("User is deactivated.", HttpStatus.FORBIDDEN);
+    }
+    catch (AuthenticationException e) {
+      if (userService.existsByUsername(loginRequest.getUsername())){
+        ResponseEntity<?> retry = userService.updateRetryCount(loginRequest.getUsername());
+        return new ResponseEntity<>("Password is wrong.", HttpStatus.FORBIDDEN);
+      }
+      return new ResponseEntity<>("Username is wrong or the user does not exist.", HttpStatus.FORBIDDEN);
+    }
 
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -66,7 +84,7 @@ public class AuthController {
 
     List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority)
         .collect(Collectors.toList());
-    
+
     String refreshToken = UUID.randomUUID().toString();
     refreshTokenService.deleteRefreshTokenForUser(userDetails.getId());
     refreshTokenService.createRefreshToken(refreshToken, userDetails.getId());
@@ -76,6 +94,7 @@ public class AuthController {
     SignInResponse signInResponse = new SignInResponse(jwt, refreshToken, userDetails.getId(),
             userDetails.getUsername(), userDetails.getEmail(), roles);
 
+    userService.resetRetryCount(loginRequest.getUsername());
     return new ResponseEntity<>(signInResponse, headers, HttpStatus.OK);
   }
 

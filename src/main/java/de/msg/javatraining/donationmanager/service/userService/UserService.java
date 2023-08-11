@@ -1,14 +1,19 @@
 package de.msg.javatraining.donationmanager.service.userService;
 
 import de.msg.javatraining.donationmanager.controller.dto.UserDTO;
+import de.msg.javatraining.donationmanager.persistence.model.emailRequest.EmailRequest;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
+import de.msg.javatraining.donationmanager.service.emailService.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -17,6 +22,9 @@ public class UserService {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @Autowired
+    EmailService emailService;
 
     public List<UserDTO> getAllUsers() {
         List<User> usersFromDB = userRepository.findAll();
@@ -45,74 +53,193 @@ public class UserService {
         return userDTOs;
     }
 
-    public void deleteUserById(Long id) {
-        userRepository.deleteById(id);
-    }
+    public void toggleUserActive(Long id) {
 
-    public void createUser(User user) {
-        //TODO: Implement mailSender for the automatically generated password
-        //TODO: Implement password auto generation
-        //TODO: New update method for the first time a user logs in
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        String tempUsername;
-        String lastName = user.getLastName().toLowerCase();
-        String firstName = user.getFirstName().toLowerCase();
-        if(lastName.length() < 5){
-            tempUsername = lastName + firstName.substring(0,2);
+        if (userRepository.findById(id).isEmpty())
+        {
+            throw new IllegalStateException("User with user id: " + id + " does not exist");
         }
         else {
-            tempUsername = lastName.substring(0,5).toLowerCase() + firstName.charAt(0);
+            User user = userRepository.findById(id).get();
+            user.setActive(!user.isActive());
+            if(user.isActive()) {
+                resetRetryCount(user.getUsername());
+            }
+            userRepository.save(user);
         }
-        int originalLength = tempUsername.length();
-
-        int i = 1;
-        String counterString = "";
-        while(userRepository.existsByUsername(tempUsername)){
-            tempUsername = tempUsername.substring(0 , originalLength);
-            tempUsername = tempUsername.concat(String.format("%d", i++));
-        }
-        user.setUsername(tempUsername);
-        userRepository.save(user);
     }
 
+    public ResponseEntity<?> createUser(User user) {
+        try{
+            userValidations(user);
 
-    public void updateUser(Long id, User newUser) {
-        User user = userRepository.findById(id)
+            //Username generation
+            String tempUsername;
+            String lastName = user.getLastName().toLowerCase();
+            String firstName = user.getFirstName().toLowerCase();
+            if(lastName.length() < 5){
+                tempUsername = lastName + firstName.substring(0,2);
+            }
+            else {
+                tempUsername = lastName.substring(0,5).toLowerCase() + firstName.charAt(0);
+            }
+            int originalLength = tempUsername.length();
+
+            int i = 1;
+            while(userRepository.existsByUsername(tempUsername)){
+                tempUsername = tempUsername.substring(0 , originalLength);
+                tempUsername = tempUsername.concat(String.format("%d", i++));
+            }
+            user.setUsername(tempUsername);
+
+            //Password generation
+            String generatedPassword = UUID.randomUUID().toString();
+
+            //Send mail with auto generated password
+            EmailRequest emailRequest = new EmailRequest();
+            emailRequest.setDestination(user.getEmail());
+            emailRequest.setSubject("User account created");
+            emailRequest.setMessage(
+                    "User account created successfully.\n" +
+                            "Login information: \n" +
+                            "Username: " +  user.getUsername() + "\n" +
+                            "Password: " +  generatedPassword + "\n" +
+                            "This a randomly generated password that will need to be changed on your first login."
+            );
+//        emailService.sendSimpleMessage(emailRequest);
+            user.setPassword(passwordEncoder.encode(generatedPassword));
+            userRepository.save(user);
+        }
+        catch (IllegalStateException e){
+            return new ResponseEntity<>("Email or mobile number already in use.", HttpStatus.FORBIDDEN);
+
+        }
+        catch (IllegalArgumentException e){
+            return new ResponseEntity<>("Email or mobile number invalid. Try again.", HttpStatus.FORBIDDEN);
+
+        }
+        return new ResponseEntity<>("User created successfully.", HttpStatus.CREATED);
+    }
+
+    public void resetRetryCount(String username){
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalStateException(
-                        "User with id: " + id + " does not exist"
+                        "User with username: " + username + " does not exist."
                 ));
-        if(newUser.getUsername() != null){
-            user.setUsername(newUser.getUsername());
-        }
-        if(newUser.getPassword() != null){
-            user.setPassword(passwordEncoder.encode(newUser.getPassword()));
-        }
-        if(newUser.getRoles() != null){
-            user.setRoles(newUser.getRoles());
-        }
-        if(newUser.getEmail() != null){
-            user.setEmail(newUser.getEmail());
-        }
+        user.setRetryCount(0);
+
         userRepository.save(user);
     }
 
-    public UserDTO getUserById(Long id) {
-        User userFromDB = userRepository.findById(id).orElse(null);
+    public ResponseEntity<?> updateRetryCount(String username) {
+        try {
+            if(userRepository.findByUsername(username).isEmpty()){
+                throw new IllegalStateException("User with username: " + username + " does not exist.");
+            }
+            User user = userRepository.findByUsername(username).get();
 
+            user.setRetryCount(user.getRetryCount()+1);
+            if(user.getRetryCount() == 5){
+                user.setActive(false);
+            }
+
+            userRepository.save(user);
+        }
+        catch (IllegalStateException e){
+            return new ResponseEntity<>("User with username: " + username + " does not exist.", HttpStatus.FORBIDDEN);
+        }
+
+        return new ResponseEntity<>("Retry count updated", HttpStatus.OK);
+    }
+
+
+    public ResponseEntity<?> updateUser(Long id, User newUser) {
+        try {
+            if(userRepository.findById(id).isEmpty()){
+                throw new IllegalStateException("User with id: " + id + " does not exist.");
+            }
+            User user = userRepository.findById(id).get();
+
+            userValidations(newUser);
+
+            if(newUser.getFirstName() != null){
+                user.setFirstName(newUser.getFirstName());
+            }
+            if(newUser.getLastName() != null){
+                user.setLastName(newUser.getLastName());
+            }
+            if(newUser.getMobileNumber() != null){
+                user.setMobileNumber(newUser.getMobileNumber());
+            }
+            if(newUser.getEmail() != null){
+                user.setEmail(newUser.getEmail());
+            }
+            if(newUser.getPassword() != null){
+                user.setPassword(passwordEncoder.encode(newUser.getPassword()));
+            }
+            if(newUser.getRoles() != null){
+                user.setRoles(newUser.getRoles());
+            }
+            if(newUser.getCampaigns() != null){
+                user.setCampaigns(newUser.getCampaigns());
+            }
+            userRepository.save(user);
+        }
+        catch(IllegalStateException e) {
+            return new ResponseEntity<>("User with id: " + id + " does not exist.", HttpStatus.FORBIDDEN);
+        }
+        return new ResponseEntity<>("User successfully updated.", HttpStatus.OK);
+    }
+
+    private void userValidations(User user) {
+            if (userRepository.existsByEmail(user.getEmail())) {
+                throw new IllegalStateException("Email already in use.");
+            }
+
+            if (userRepository.existsByMobileNumber(user.getMobileNumber())) {
+                throw new IllegalStateException("Mobile number already in use.");
+            }
+
+            if (!user.getMobileNumber().matches("^(?:\\+?40|0)?7\\d{8}$")) {
+                throw new IllegalArgumentException("Mobile number is not valid. Try Again");
+            }
+
+            if (!user.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+                throw new IllegalArgumentException("Email is not valid. Try Again");
+            }
+    }
+
+    public ResponseEntity<?> getUserById(Long id) {
         UserDTO userDTO = new UserDTO();
-        userDTO.setId(userFromDB.getId());
-        userDTO.setFirstName(userFromDB.getFirstName());
-        userDTO.setLastName(userFromDB.getLastName());
-        userDTO.setMobileNumber(userFromDB.getMobileNumber());
-        userDTO.setUsername(userFromDB.getUsername());
-        userDTO.setEmail(userFromDB.getEmail());
-        userDTO.setPassword(userFromDB.getPassword());
-        userDTO.setRoles(userFromDB.getRoles());
-        userDTO.setCampaigns(userFromDB.getCampaigns());
-        userDTO.setActive(userFromDB.isActive());
-        userDTO.setFirstLogin(userFromDB.isFirstLogin());
-        userDTO.setRetryCount(userFromDB.getRetryCount());
+        try {
+            if(userRepository.findById(id).isEmpty()){
+                throw new IllegalStateException("User with id: " + id + " does not exist.");
+            }
+            User userFromDB = userRepository.findById(id).get();
 
-        return userDTO;
+
+            userDTO.setId(userFromDB.getId());
+            userDTO.setFirstName(userFromDB.getFirstName());
+            userDTO.setLastName(userFromDB.getLastName());
+            userDTO.setMobileNumber(userFromDB.getMobileNumber());
+            userDTO.setUsername(userFromDB.getUsername());
+            userDTO.setEmail(userFromDB.getEmail());
+            userDTO.setPassword(userFromDB.getPassword());
+            userDTO.setRoles(userFromDB.getRoles());
+            userDTO.setCampaigns(userFromDB.getCampaigns());
+            userDTO.setActive(userFromDB.isActive());
+            userDTO.setFirstLogin(userFromDB.isFirstLogin());
+            userDTO.setRetryCount(userFromDB.getRetryCount());
+
+
+        }
+        catch (IllegalStateException e) {
+            return new ResponseEntity<>("User with id: " + id + " does not exist.", HttpStatus.FORBIDDEN);
+        }
+        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+    }
+
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
     }
 }
