@@ -5,7 +5,6 @@ import de.msg.javatraining.donationmanager.persistence.repository.CampaignReposi
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,12 +18,14 @@ public class CampaignService {
         return campaignRepository.findAll() ;
     }
 
+
+
     public void createCampaign(Campaign campaign){
         campaignRepository.save(campaign);
     }
 
     public void updateCampaign(Long id, Campaign newCampaign){
-        Campaign campaign1 = campaignRepository.findById(id).orElseThrow(() -> new IllegalStateException(
+        Campaign campaign1 = findById(id).orElseThrow(() -> new IllegalStateException(
                 "User with id: " + id + " does not exist"
         ));
 
@@ -36,6 +37,10 @@ public class CampaignService {
 
         campaignRepository.save(campaign1);
 
+    }
+
+    public Optional<Campaign> findById(Long id){
+       return  campaignRepository.findById(id);
     }
 
     public void deleteCampaignById(Long id){

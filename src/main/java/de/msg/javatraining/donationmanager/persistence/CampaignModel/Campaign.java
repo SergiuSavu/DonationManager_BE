@@ -8,6 +8,10 @@ import jakarta.persistence.*;
 import de.msg.javatraining.donationmanager.persistence.DonationModel.Donation;
 import de.msg.javatraining.donationmanager.persistence.model.User;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -20,6 +24,11 @@ import java.util.Set;
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = "name")
         })
+@Data
+@NoArgsConstructor
+
+@Builder
+@AllArgsConstructor
 public class Campaign {
 
     @Id
@@ -28,7 +37,6 @@ public class Campaign {
     private String name;
     private String purpose;
 
-    public Campaign(){}
 
     public Campaign(String name, String purpose) {
         this.name = name;
