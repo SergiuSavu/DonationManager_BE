@@ -15,7 +15,8 @@ import org.springframework.http.ResponseEntity;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class) // This annotation initializes the Mockito extensions for JUnit 5
+@ExtendWith(MockitoExtension.class)
+
 class PermissionControllerTest {
 
     @InjectMocks
@@ -26,37 +27,37 @@ class PermissionControllerTest {
 
     @Test
     void testAddPermissionToUser_Success() {
-        when(permissionService.addPermissionToUser(anyLong(), any(Role.class), any(PermissionEnum.class)))
-                .thenReturn(PermissionEnum.CAMP_IMPORT);
+        when(permissionService.addPermissionToRole(anyLong(), any(Role.class), any(PermissionEnum.class)))
+                .thenReturn(PermissionEnum.PERMISSION_MANAGEMENT);
 
-        ResponseEntity<Void> response = permissionController.addPermissionToUser(1L, new Role(), PermissionEnum.CAMP_IMPORT);
+        ResponseEntity<Void> response = permissionController.addPermissionToRole(1L, new Role(), PermissionEnum.PERMISSION_MANAGEMENT);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
     void testAddPermissionToUser_Failure() {
-        when(permissionService.addPermissionToUser(anyLong(), any(Role.class), any(PermissionEnum.class)))
+        when(permissionService.addPermissionToRole(anyLong(), any(Role.class), any(PermissionEnum.class)))
                 .thenReturn(null); // Simulating permission not granted
 
-        ResponseEntity<Void> response = permissionController.addPermissionToUser(1L, new Role(), PermissionEnum.CAMP_IMPORT);
+        ResponseEntity<Void> response = permissionController.addPermissionToRole(1L, new Role(), PermissionEnum.CAMP_IMPORT);
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
     @Test
     void testDeletePermissionFromUser_Success() {
-        when(permissionService.deletePermissionFromUser(anyLong(), any(Role.class), any(PermissionEnum.class)))
+        when(permissionService.deletePermissionFromRole(anyLong(), any(Role.class), any(PermissionEnum.class)))
                 .thenReturn(PermissionEnum.BENEF_MANAGEMENT);
 
-        ResponseEntity<Void> response = permissionController.deletePermissionFromUser(1L, new Role(), PermissionEnum.BENEF_MANAGEMENT);
+        ResponseEntity<Void> response = permissionController.deletePermissionFromRole(1L, new Role(), PermissionEnum.BENEF_MANAGEMENT);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
     void testDeletePermissionFromUser_Failure() {
-        when(permissionService.deletePermissionFromUser(anyLong(), any(Role.class), any(PermissionEnum.class)))
+        when(permissionService.deletePermissionFromRole(anyLong(), any(Role.class), any(PermissionEnum.class)))
                 .thenReturn(null); // Simulating permission not deleted
 
-        ResponseEntity<Void> response = permissionController.deletePermissionFromUser(1L, new Role(), PermissionEnum.BENEF_MANAGEMENT);
+        ResponseEntity<Void> response = permissionController.deletePermissionFromRole(1L, new Role(), PermissionEnum.BENEF_MANAGEMENT);
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
