@@ -9,9 +9,11 @@ import de.msg.javatraining.donationmanager.persistence.repository.UserRepository
 import de.msg.javatraining.donationmanager.service.permissionService.PermissionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -20,17 +22,19 @@ import java.util.Set;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
+@ExtendWith(MockitoExtension.class) // This annotation initializes the Mockito extensions for JUnit 5
 class PermissionServiceTest {
-
     @InjectMocks
     private PermissionService permissionService;
-
     @Mock
-    private RoleRepository roleRepository;
-
+    private  RoleRepository roleRepository;
     @Mock
     private UserRepository userRepository;
+
+    //@Mock
+    //private PermissionRepository permissionRepository;
 
     @BeforeEach
     void setUp() {
@@ -49,94 +53,65 @@ class PermissionServiceTest {
         return user;
     }
 
-    private User createUserWithRoleAndPermission2(Long userId) {
+    @Test
+    void testAddPermissionToRole() {
         Set<PermissionEnum> permissionEnums = new HashSet<>();
+        permissionEnums.add(PermissionEnum.PERMISSION_MANAGEMENT);
+        permissionEnums.add(PermissionEnum.USER_MANAGEMENT);
+
+        // Test case: Permission already exists
+        PermissionEnum existingPermission = PermissionEnum.USER_MANAGEMENT;
+        assertThrows(IllegalArgumentException.class, () -> {
+            permissionService.addPermissionToRole(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), existingPermission);
+        });
+
+        // Test case: Permission to add is null
+        assertThrows(IllegalArgumentException.class, () -> {
+            permissionService.addPermissionToRole(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), null);
+        });
+
+        // Create a user with the necessary role and permissions
+        PermissionEnum expected = PermissionEnum.BENEF_MANAGEMENT;
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(createUserWithRoleAndPermission1(1L)));
+        PermissionEnum p = permissionService.addPermissionToRole(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), PermissionEnum.BENEF_MANAGEMENT);
+
+        assertEquals(expected, p);
+
+    }
+    @Test
+    void testDeletePermissionFromRole() {
+        Set<PermissionEnum> permissionEnums = new HashSet<>();
+        permissionEnums.add(PermissionEnum.USER_MANAGEMENT);
+
+        // Mock the behavior of userRepository.findById to return the user you want to use
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(createUserWithRoleAndPermission1(1L)));
+
+        // Test case: Permission to delete is null
+        assertThrows(IllegalArgumentException.class, () -> {
+            permissionService.deletePermissionFromRole(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), null);
+        });
+
+        // Test case: User not found or permission not available
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> {
+            permissionService.deletePermissionFromRole(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), PermissionEnum.CAMP_IMPORT);
+        });
+
+        // Test case: Permission to delete does not exist
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(createUserWithRoleAndPermission1(1L)));
+        assertThrows(IllegalArgumentException.class, () -> {
+            permissionService.deletePermissionFromRole(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), PermissionEnum.CAMP_IMPORT);
+        });
+
+        // Test case: Successful deletion
+        User user = createUserWithRoleAndPermission1(1L);
+        PermissionEnum expected = PermissionEnum.BENEF_MANAGEMENT;
+
+        // Mock the behavior of userRepository.findById for the user
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         permissionEnums.add(PermissionEnum.BENEF_MANAGEMENT);
-        Set<Role> roles = new HashSet<>();
-        Role role = new Role(1, ERole.ROLE_MGN, permissionEnums);
-        roles.add(role);
-
-        User user = new User(userId,"testuser", "test", "1234567890", "something", "test@example.com", "psswd", true, false, 1, roles, new HashSet<>());
-        return user;
-    }
-
-    @Test
-    void testAddPermissionToUser_InvalidInput() {
-        // Invalid user IDs and permission
-        boolean result = permissionService.addPermissionToUser(null, 2L, PermissionEnum.CAMP_IMPORT);
-        assertFalse(result);
-
-        result = permissionService.addPermissionToUser(1L, null, PermissionEnum.CAMP_IMPORT);
-        assertFalse(result);
-
-        result = permissionService.addPermissionToUser(1L, 2L, null);
-        assertFalse(result);
-    }
-
-    @Test
-    void testAddPermissionToUser_UserNotFound() {
-        // Mock userRepository.findById to return empty Optional for user
-        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
-
-        boolean result = permissionService.addPermissionToUser(1L, 2L, PermissionEnum.CAMP_IMPORT);
-        assertFalse(result);
-    }
-
-
-    @Test
-    void testDeletePermissionFromUser_InvalidInput() {
-        // Invalid user IDs and permission
-        boolean result = permissionService.deletePermissionFromUser(null, 2L, PermissionEnum.BENEF_MANAGEMENT);
-        assertFalse(result);
-
-        result = permissionService.deletePermissionFromUser(1L, null, PermissionEnum.BENEF_MANAGEMENT);
-        assertFalse(result);
-
-        result = permissionService.deletePermissionFromUser(1L, 2L, null);
-        assertFalse(result);
-    }
-
-    @Test
-    void testDeletePermissionFromUser_UserNotFound() {
-        // Mock userRepository.findById to return empty Optional for user
-        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
-
-        boolean result = permissionService.deletePermissionFromUser(1L, 2L, PermissionEnum.BENEF_MANAGEMENT);
-        assertFalse(result);
-    }
-
-    @Test
-    void testAddPermissionToUser() {
-        // Create a user with the necessary role and permissions
-        User user = createUserWithRoleAndPermission1(1L);
-        User user2 = createUserWithRoleAndPermission2(2L); // The user whose permissions we want to change
-
-        // Mock the behavior of userRepository.findById for both adminUser and targetUser
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(userRepository.findById(2L)).thenReturn(Optional.of(user2));
-
-        boolean result = permissionService.addPermissionToUser(user.getId(), user2.getId(),PermissionEnum.CAMP_IMPORT);
-        assertTrue(result);
-
-        boolean result2 = permissionService.addPermissionToUser(user.getId(), user2.getId(),PermissionEnum.CAMP_REPORT_RESTRICTED);
-        assertFalse(result2);
-    }
-
-    @Test
-    void testDeletePermissionFromUser() {
-        // Create a user with the necessary role and permissions
-        User user = createUserWithRoleAndPermission1(1L);
-        User user2 = createUserWithRoleAndPermission2(2L); // The user whose permissions we want to change
-
-        // Mock the behavior of userRepository.findById for both adminUser and targetUser
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(userRepository.findById(2L)).thenReturn(Optional.of(user2));
-
-        boolean result = permissionService.deletePermissionFromUser(1L, 2L, PermissionEnum.BENEF_MANAGEMENT);
-        assertTrue(result);
-
-        boolean result2 = permissionService.deletePermissionFromUser(1L, 2L, PermissionEnum.BENEF_MANAGEMENT);
-        assertFalse(result2);
+        PermissionEnum p = permissionService.deletePermissionFromRole(user.getId(), new Role(1, ERole.ROLE_ADM, permissionEnums), PermissionEnum.BENEF_MANAGEMENT);
+        assertEquals(expected, p);
     }
 
     @Test
