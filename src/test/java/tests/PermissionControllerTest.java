@@ -27,9 +27,9 @@ class PermissionControllerTest {
     @Test
     void testAddPermissionToUser_Success() {
         when(permissionService.addPermissionToRole(anyLong(), any(Role.class), any(PermissionEnum.class)))
-                .thenReturn(PermissionEnum.CAMP_IMPORT);
+                .thenReturn(PermissionEnum.PERMISSION_MANAGEMENT);
 
-        ResponseEntity<Void> response = permissionController.addPermissionToRole(1L, new Role(), PermissionEnum.CAMP_IMPORT);
+        ResponseEntity<Void> response = permissionController.addPermissionToRole(1L, new Role(), PermissionEnum.PERMISSION_MANAGEMENT);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
