@@ -5,6 +5,7 @@ import de.msg.javatraining.donationmanager.persistence.model.Role;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.persistence.repository.RoleRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
+import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ public class PermissionService {
     //private PermissionRepository permissionRepository;
 
     public PermissionEnum addPermissionToRole(Long userId, Role role, PermissionEnum permissionToAdd) {
+  
         if (permissionToAdd == null) {
             throw new IllegalArgumentException("Permission to add cannot be null.");
         }
@@ -54,7 +56,6 @@ public class PermissionService {
         }
         throw new IllegalArgumentException("User not found or permission not available.");
     }
-
 
 
     public PermissionEnum deletePermissionFromRole(Long userId, Role role, PermissionEnum permissionToDelete) {

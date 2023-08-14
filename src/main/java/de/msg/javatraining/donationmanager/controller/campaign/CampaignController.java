@@ -3,6 +3,8 @@ package de.msg.javatraining.donationmanager.controller.campaign;
 import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
 import de.msg.javatraining.donationmanager.service.campaignService.CampaignService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,34 +22,32 @@ public class CampaignController {
         return campaignService.getAllCampaigns();
     }
     @PostMapping()
-    public void createCapmaign(@RequestBody Campaign campaign){
-
-        try{
-
-            campaignService.createCampaign(campaign);
-
-        }catch (Exception e){
-            System.out.println("invalid username   try again");
+    public ResponseEntity<Void> createCapmaign(@PathVariable Long userId, @PathVariable String name, @PathVariable String purpose){
+        Campaign c = campaignService.createCampaign(userId,name,purpose);
+        if (c!=null) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Return 403 Forbidden if permission was not granted
         }
-
-
-
     }
 
     @PutMapping("/{id}")
-    public void updateCampaign(@PathVariable("id") Long id, @RequestBody Campaign newCampaign){
-
-        try{
-
-            campaignService.updateCampaign(id,newCampaign);
-
-        }catch (Exception e){
-            System.out.println("invalid username   try again");
+    public ResponseEntity<Void> updateCampaign(@PathVariable Long userId, @PathVariable Long campaignId, @PathVariable String name, @PathVariable String purpose){
+        Campaign c = campaignService.updateCampaign(userId, campaignId,name,purpose);
+        if (c!=null) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Return 403 Forbidden if permission was not granted
         }
     }
 
-    @DeleteMapping("/{id}")
-    public void deleteCampaignById(@PathVariable("id") Long id){
-        campaignService.deleteCampaignById(id);
+    @DeleteMapping("/{id}/delete")
+    public ResponseEntity<Void> deleteCampaignById(@PathVariable("id") Long userId, @PathVariable Long campaignId){
+        Campaign c = campaignService.deleteCampaignById(userId,campaignId);
+        if (c!=null) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Return 403 Forbidden if permission was not granted
+        }
     }
 }

@@ -7,6 +7,7 @@ import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.persistence.repository.RoleRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
 import de.msg.javatraining.donationmanager.service.permissionService.PermissionService;
+import org.hibernate.ObjectNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -78,6 +79,7 @@ class PermissionServiceTest {
         assertEquals(expected, p);
 
     }
+  
     @Test
     void testDeletePermissionFromRole() {
         Set<PermissionEnum> permissionEnums = new HashSet<>();

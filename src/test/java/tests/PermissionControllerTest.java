@@ -16,6 +16,7 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
+
 class PermissionControllerTest {
 
     @InjectMocks
@@ -59,4 +60,8 @@ class PermissionControllerTest {
         ResponseEntity<Void> response = permissionController.deletePermissionFromRole(1L, new Role(), PermissionEnum.BENEF_MANAGEMENT);
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
+
+    // Add more test cases as needed
+
+    // Remember to adjust return values and parameters based on your application's logic
 }
