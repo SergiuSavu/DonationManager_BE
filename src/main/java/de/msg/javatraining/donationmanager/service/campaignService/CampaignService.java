@@ -39,7 +39,7 @@ public class CampaignService {
             PermissionEnum adminPermissionToCheck = PermissionEnum.CAMP_MANAGEMENT;
             for (Role adminRole : userADMIN.get().getRoles()) {
                 if (adminRole.getPermissions().contains(adminPermissionToCheck)){
-                    if(campaignRepository.findCampaignByName(name).getName() == name){
+                    if(campaignRepository.findCampaignByName(name)!=null ){
                          throw new IllegalArgumentException("Not a unique name");
                     }
                     else {
@@ -62,10 +62,11 @@ public class CampaignService {
         if (name == null || purpose == null)
             throw new IllegalArgumentException("Name or purpose cannot be null");
 
-        if(campaignRepository.findCampaignByName(name).getName() == name){
+        if(campaignRepository.findCampaignByName(name) != null){
             throw new IllegalArgumentException("Not a unique name");
         }
         Optional<User> userADMIN = userRepository.findById(userId);
+
         if (userADMIN.isPresent()) {
             PermissionEnum adminPermissionToCheck = PermissionEnum.CAMP_MANAGEMENT;
             for (Role adminRole : userADMIN.get().getRoles()) {
@@ -78,11 +79,13 @@ public class CampaignService {
                         return campaign.get();
                     }
                     else throw new IllegalArgumentException("Campaign not found.");
+
                 }
+                else throw new IllegalArgumentException("No permission to modify a  campaign. ");
 
             }
         }
-        throw new IllegalArgumentException("User not found.");
+        throw new IllegalArgumentException("User not found1.");
     }
 
     public Campaign deleteCampaignById(Long userId, Long campaignId){
@@ -102,8 +105,12 @@ public class CampaignService {
                     }
                     else throw new IllegalArgumentException("Campaign not found.");
                 }
+                else throw new IllegalArgumentException("No permission to delete a campaign. ");
+
             }
         }
         throw new IllegalArgumentException("User not found.");
     }
+
+
 }
