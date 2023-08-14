@@ -1,6 +1,5 @@
 package de.msg.javatraining.donationmanager.service.permissionService;
 
-import de.msg.javatraining.donationmanager.persistence.model.ERole;
 import de.msg.javatraining.donationmanager.persistence.model.PermissionEnum;
 import de.msg.javatraining.donationmanager.persistence.model.Role;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
@@ -10,6 +9,7 @@ import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -22,10 +22,20 @@ public class PermissionService {
     @Autowired
     private RoleRepository roleRepository;
 
-    public PermissionEnum addPermissionToUser(Long userId, Role role, PermissionEnum permissionToAdd) {
+    //@Autowired
+    //private PermissionRepository permissionRepository;
+
+    public PermissionEnum addPermissionToRole(Long userId, Role role, PermissionEnum permissionToAdd) {
+  
         if (permissionToAdd == null) {
             throw new IllegalArgumentException("Permission to add cannot be null.");
         }
+
+        Set<PermissionEnum> s = new HashSet<>(); s.add(permissionToAdd);
+        // Check if the permission exists in the PermissionRepository
+        //if (!permissionRepository.exists(new PermissionEnumWrapper(s))) {
+        //    throw new IllegalArgumentException("Permission does not exist.");
+        //}
 
         Optional<User> userADMIN = userRepository.findById(userId);
 
@@ -35,7 +45,7 @@ public class PermissionService {
             for (Role adminRole : userADMIN.get().getRoles()) {
                 if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
                     if (role.getPermissions().contains(permissionToAdd)) {
-                        throw new IllegalArgumentException("Permission already exists.");}
+                        throw new NullPointerException("Permission already exists.");}
                     else {
                         role.getPermissions().add(permissionToAdd);
                         roleRepository.save(role);
@@ -48,11 +58,16 @@ public class PermissionService {
     }
 
 
-
-    public PermissionEnum deletePermissionFromUser(Long userId, Role role, PermissionEnum permissionToDelete) {
+    public PermissionEnum deletePermissionFromRole(Long userId, Role role, PermissionEnum permissionToDelete) {
         if (userId == null || permissionToDelete == null) {
             throw new IllegalArgumentException("User ID and permission to delete cannot be null.");
         }
+
+        Set<PermissionEnum> pp = new HashSet<>(); pp.add(permissionToDelete);
+        // Check if the permission exists in the PermissionRepository
+        //if (!permissionRepository.exists(new PermissionEnumWrapper(pp))) {
+        //    throw new IllegalArgumentException("Permission does not exist.");
+        //}
 
         Optional<User> userADMIN = userRepository.findById(userId);
 

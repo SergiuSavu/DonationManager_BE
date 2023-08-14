@@ -73,7 +73,7 @@ public class AuthController {
         ResponseEntity<?> retry = userService.updateRetryCount(loginRequest.getUsername());
         return new ResponseEntity<>("Password is wrong.", HttpStatus.FORBIDDEN);
       }
-      return new ResponseEntity<>("Username is wrong or the user does not exist.", HttpStatus.FORBIDDEN);
+      return new ResponseEntity<>("Username is wrong.", HttpStatus.FORBIDDEN);
     }
 
     SecurityContextHolder.getContext().setAuthentication(authentication);

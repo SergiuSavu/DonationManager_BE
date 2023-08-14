@@ -23,6 +23,7 @@ import java.util.Set;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class) // This annotation initializes the Mockito extensions for JUnit 5
 class PermissionServiceTest {
@@ -32,6 +33,9 @@ class PermissionServiceTest {
     private  RoleRepository roleRepository;
     @Mock
     private UserRepository userRepository;
+
+    //@Mock
+    //private PermissionRepository permissionRepository;
 
     @BeforeEach
     void setUp() {
@@ -51,45 +55,33 @@ class PermissionServiceTest {
     }
 
     @Test
-    void testAddPermissionToUser() {
+    void testAddPermissionToRole() {
         Set<PermissionEnum> permissionEnums = new HashSet<>();
         permissionEnums.add(PermissionEnum.PERMISSION_MANAGEMENT);
         permissionEnums.add(PermissionEnum.USER_MANAGEMENT);
 
-        // Mock the behavior of userRepository.findById to return the user you want to use
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(createUserWithRoleAndPermission1(1L)));
-
         // Test case: Permission already exists
         PermissionEnum existingPermission = PermissionEnum.USER_MANAGEMENT;
         assertThrows(IllegalArgumentException.class, () -> {
-            permissionService.addPermissionToUser(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), existingPermission);
+            permissionService.addPermissionToRole(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), existingPermission);
         });
 
         // Test case: Permission to add is null
         assertThrows(IllegalArgumentException.class, () -> {
-            permissionService.addPermissionToUser(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), null);
-        });
-
-        // Test case: User not found or permission not available
-        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> {
-            permissionService.addPermissionToUser(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), PermissionEnum.CAMP_IMPORT);
+            permissionService.addPermissionToRole(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), null);
         });
 
         // Create a user with the necessary role and permissions
-        User user = createUserWithRoleAndPermission1(1L);
         PermissionEnum expected = PermissionEnum.BENEF_MANAGEMENT;
-        // Mock the behavior of userRepository.findById for both adminUser and targetUser
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        PermissionEnum p = permissionService.addPermissionToUser(user.getId(), new Role(1, ERole.ROLE_ADM, permissionEnums), PermissionEnum.BENEF_MANAGEMENT);
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(createUserWithRoleAndPermission1(1L)));
+        PermissionEnum p = permissionService.addPermissionToRole(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), PermissionEnum.BENEF_MANAGEMENT);
 
         assertEquals(expected, p);
 
     }
-
-
+  
     @Test
-    void testDeletePermissionFromUser() {
+    void testDeletePermissionFromRole() {
         Set<PermissionEnum> permissionEnums = new HashSet<>();
         permissionEnums.add(PermissionEnum.USER_MANAGEMENT);
 
@@ -98,19 +90,19 @@ class PermissionServiceTest {
 
         // Test case: Permission to delete is null
         assertThrows(IllegalArgumentException.class, () -> {
-            permissionService.deletePermissionFromUser(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), null);
+            permissionService.deletePermissionFromRole(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), null);
         });
 
         // Test case: User not found or permission not available
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
         assertThrows(IllegalArgumentException.class, () -> {
-            permissionService.deletePermissionFromUser(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), PermissionEnum.CAMP_IMPORT);
+            permissionService.deletePermissionFromRole(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), PermissionEnum.CAMP_IMPORT);
         });
 
         // Test case: Permission to delete does not exist
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(createUserWithRoleAndPermission1(1L)));
         assertThrows(IllegalArgumentException.class, () -> {
-            permissionService.deletePermissionFromUser(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), PermissionEnum.CAMP_IMPORT);
+            permissionService.deletePermissionFromRole(1L, new Role(1, ERole.ROLE_ADM, permissionEnums), PermissionEnum.CAMP_IMPORT);
         });
 
         // Test case: Successful deletion
@@ -120,7 +112,7 @@ class PermissionServiceTest {
         // Mock the behavior of userRepository.findById for the user
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         permissionEnums.add(PermissionEnum.BENEF_MANAGEMENT);
-        PermissionEnum p = permissionService.deletePermissionFromUser(user.getId(), new Role(1, ERole.ROLE_ADM, permissionEnums), PermissionEnum.BENEF_MANAGEMENT);
+        PermissionEnum p = permissionService.deletePermissionFromRole(user.getId(), new Role(1, ERole.ROLE_ADM, permissionEnums), PermissionEnum.BENEF_MANAGEMENT);
         assertEquals(expected, p);
     }
 
