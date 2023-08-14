@@ -29,10 +29,10 @@ public class UserService {
     public List<UserDTO> getAllUsers() {
         List<User> usersFromDB = userRepository.findAll();
         List<UserDTO> userDTOs = new ArrayList<>();
-        UserDTO user = new UserDTO();
 
         usersFromDB.forEach(
                 u -> {
+                    UserDTO user = new UserDTO();
                     user.setId(u.getId());
                     user.setFirstName(u.getFirstName());
                     user.setLastName(u.getLastName());
@@ -92,33 +92,29 @@ public class UserService {
             }
             user.setUsername(tempUsername);
 
-            //Password generation
-            String generatedPassword = UUID.randomUUID().toString();
-
-            //Send mail with auto generated password
-            EmailRequest emailRequest = new EmailRequest();
-            emailRequest.setDestination(user.getEmail());
-            emailRequest.setSubject("User account created");
-            emailRequest.setMessage(
-                    "User account created successfully.\n" +
-                            "Login information: \n" +
-                            "Username: " +  user.getUsername() + "\n" +
-                            "Password: " +  generatedPassword + "\n" +
-                            "This a randomly generated password that will need to be changed on your first login."
-            );
-//        emailService.sendSimpleMessage(emailRequest);
-            user.setPassword(passwordEncoder.encode(generatedPassword));
+//            //Password generation
+//            String generatedPassword = UUID.randomUUID().toString();
+//
+//            //Send mail with auto generated password
+//            EmailRequest emailRequest = new EmailRequest();
+//            emailRequest.setDestination(user.getEmail());
+//            emailRequest.setSubject("User account created");
+//            emailRequest.setMessage(
+//                    "User account created successfully.\n" +
+//                            "Login information: \n" +
+//                            "Username: " +  user.getUsername() + "\n" +
+//                            "Password: " +  generatedPassword + "\n" +
+//                            "This a randomly generated password that will need to be changed on your first login."
+//            );
+////        emailService.sendSimpleMessage(emailRequest);
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
             userRepository.save(user);
         }
-        catch (IllegalStateException e){
-            return new ResponseEntity<>("Email or mobile number already in use.", HttpStatus.FORBIDDEN);
+        catch (IllegalStateException | IllegalArgumentException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
 
         }
-        catch (IllegalArgumentException e){
-            return new ResponseEntity<>("Email or mobile number invalid. Try again.", HttpStatus.FORBIDDEN);
-
-        }
-        return new ResponseEntity<>("User created successfully.", HttpStatus.CREATED);
+        return new ResponseEntity<>("User created successfully.", HttpStatus.OK);
     }
 
     public void resetRetryCount(String username){
@@ -146,7 +142,7 @@ public class UserService {
             userRepository.save(user);
         }
         catch (IllegalStateException e){
-            return new ResponseEntity<>("User with username: " + username + " does not exist.", HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
 
         return new ResponseEntity<>("Retry count updated", HttpStatus.OK);
@@ -186,7 +182,7 @@ public class UserService {
             userRepository.save(user);
         }
         catch(IllegalStateException e) {
-            return new ResponseEntity<>("User with id: " + id + " does not exist.", HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
         return new ResponseEntity<>("User successfully updated.", HttpStatus.OK);
     }
@@ -201,11 +197,11 @@ public class UserService {
             }
 
             if (!user.getMobileNumber().matches("^(?:\\+?40|0)?7\\d{8}$")) {
-                throw new IllegalArgumentException("Mobile number is not valid. Try Again");
+                throw new IllegalArgumentException("Mobile number is not valid.");
             }
 
             if (!user.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
-                throw new IllegalArgumentException("Email is not valid. Try Again");
+                throw new IllegalArgumentException("Email is not valid.");
             }
     }
 
@@ -234,7 +230,7 @@ public class UserService {
 
         }
         catch (IllegalStateException e) {
-            return new ResponseEntity<>("User with id: " + id + " does not exist.", HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }
