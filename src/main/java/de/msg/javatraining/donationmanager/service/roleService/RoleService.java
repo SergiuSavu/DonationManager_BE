@@ -13,6 +13,7 @@ public class RoleService {
     @Autowired
     private RoleRepository roleRepository;
     public List<Role> getAllRoles() {
+
         return roleRepository.findAll();
     }
 }
