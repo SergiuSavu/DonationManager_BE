@@ -3,7 +3,10 @@ package de.msg.javatraining.donationmanager.service.userService;
 import de.msg.javatraining.donationmanager.controller.dto.UserDTO;
 import de.msg.javatraining.donationmanager.persistence.model.emailRequest.EmailRequest;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
+import de.msg.javatraining.donationmanager.persistence.notificationSystem.NotificationParameter;
+import de.msg.javatraining.donationmanager.persistence.notificationSystem.NotificationType;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
+import de.msg.javatraining.donationmanager.service.NotificationService;
 import de.msg.javatraining.donationmanager.service.emailService.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +29,9 @@ public class UserService {
 
     @Autowired
     EmailService emailService;
+
+    @Autowired
+    NotificationService notificationService;
 
     public List<UserDTO> getAllUsers() {
         List<User> usersFromDB = userRepository.findAll();
@@ -93,22 +100,31 @@ public class UserService {
             user.setUsername(tempUsername);
 
             //Password generation
-            String generatedPassword = UUID.randomUUID().toString();
+//            String generatedPassword = UUID.randomUUID().toString();
 
             //Send mail with auto generated password
-            EmailRequest emailRequest = new EmailRequest();
-            emailRequest.setDestination(user.getEmail());
-            emailRequest.setSubject("User account created");
-            emailRequest.setMessage(
-                    "User account created successfully.\n" +
-                            "Login information: \n" +
-                            "Username: " +  user.getUsername() + "\n" +
-                            "Password: " +  generatedPassword + "\n" +
-                            "This a randomly generated password that will need to be changed on your first login."
-            );
+//            EmailRequest emailRequest = new EmailRequest();
+//            emailRequest.setDestination(user.getEmail());
+//            emailRequest.setSubject("User account created");
+//            emailRequest.setMessage(
+//                    "User account created successfully.\n" +
+//                            "Login information: \n" +
+//                            "Username: " +  user.getUsername() + "\n" +
+//                            "Password: " +  generatedPassword + "\n" +
+//                            "This a randomly generated password that will need to be changed on your first login."
+//            );
 //        emailService.sendSimpleMessage(emailRequest);
-            user.setPassword(passwordEncoder.encode(generatedPassword));
+//            user.setPassword(passwordEncoder.encode(generatedPassword));
             userRepository.save(user);
+
+            List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
+                    new NotificationParameter(user.getFirstName()),
+                    new NotificationParameter(user.getLastName()),
+                    new NotificationParameter(user.getMobileNumber()),
+                    new NotificationParameter(user.getEmail()),
+                    new NotificationParameter(user.getUsername())
+            ));
+            notificationService.saveNotification(user, parameters, NotificationType.WELCOME_NEW_USER);
         }
         catch (IllegalStateException e){
             return new ResponseEntity<>("Email or mobile number already in use.", HttpStatus.FORBIDDEN);
