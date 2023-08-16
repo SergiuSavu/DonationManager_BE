@@ -1,6 +1,9 @@
 package de.msg.javatraining.donationmanager.service.donationService;
 
 import de.msg.javatraining.donationmanager.persistence.donationModel.Donation;
+import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
+import de.msg.javatraining.donationmanager.persistence.donationModel.Donation;
+import de.msg.javatraining.donationmanager.persistence.repository.CampaignRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.DonationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,9 @@ public class DonationService {
 
     @Autowired
     private DonationRepository donationRepository;
+
+    @Autowired
+    private CampaignRepository campaignRepository;
 
     public List<Donation> getAllDonations() {
         return donationRepository.findAll();
@@ -58,5 +64,24 @@ public class DonationService {
             donation.setCreatedDate(updatedDonation.getCreatedDate());
         }
         donationRepository.save(donation);
+    }
+
+    public boolean findDonationsByCampaignId(Long id){
+        int counter=0;
+        try {
+            List<Donation> donations = donationRepository.findDonationsByCampaignId(id);
+            for(Donation d : donations){
+                if(d.getAmount()!=0)
+                    counter++;
+
+            }
+
+            return counter != 0;
+
+        }catch (Exception e){
+            System.out.println("problema la donatie");
+            return false;
+        }
+
     }
 }
