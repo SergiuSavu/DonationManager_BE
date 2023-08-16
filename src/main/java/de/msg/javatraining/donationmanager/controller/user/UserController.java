@@ -42,4 +42,7 @@ public class UserController {
     public ResponseEntity<?> updateUser(@PathVariable("id") Long id, @RequestBody User newUser){
         return userService.updateUser(id, newUser);
     }
+
+    // getRoles, addRoles, deleteRoles with @PutMapping("/roles")... "/roles/{id}",
+    // "roles/add/{id}", "roles/delete/{id}")
 }
