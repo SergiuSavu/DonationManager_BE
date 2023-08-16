@@ -2,6 +2,7 @@ package de.msg.javatraining.donationmanager.controller.campaign;
 
 import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
 import de.msg.javatraining.donationmanager.service.campaignService.CampaignService;
+import de.msg.javatraining.donationmanager.service.donationService.DonationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,38 +17,57 @@ public class CampaignController {
     @Autowired
     private CampaignService campaignService;
 
+    @Autowired
+    private DonationService donationService;
+
 
     @GetMapping()
     public List<Campaign> getALlCampaigns(){
         return campaignService.getAllCampaigns();
     }
-    @PostMapping()
-    public ResponseEntity<Void> createCapmaign(@PathVariable Long userId, @PathVariable String name, @PathVariable String purpose){
-        Campaign c = campaignService.createCampaign(userId,name,purpose);
-        if (c!=null) {
+    @PostMapping("/{userId}") ///campaign/userId
+    public ResponseEntity<?> createCapmaign(@PathVariable Long userId,@RequestBody Campaign campaign){
+
+        Campaign camp = campaignService.createCampaign(userId,campaign.getName(),campaign.getPurpose());
+        if(camp!=null){
             return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Return 403 Forbidden if permission was not granted
+        }else{
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+
+
+
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Void> updateCampaign(@PathVariable Long userId, @PathVariable Long campaignId, @PathVariable String name, @PathVariable String purpose){
-        Campaign c = campaignService.updateCampaign(userId, campaignId,name,purpose);
-        if (c!=null) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Return 403 Forbidden if permission was not granted
-        }
+    @PutMapping("/{campId}/{userId}")
+    public ResponseEntity<?> updateCampaign(@PathVariable("campId") Long campId,@PathVariable("userId") Long userId, @RequestBody Campaign newCampaign){
+
+
+
+        Campaign camp =campaignService.updateCampaign(userId,campId, newCampaign.getName(), newCampaign.getPurpose());
+
+            if(camp!=null){
+                return ResponseEntity.ok().build();
+            }else{
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
     }
 
-    @DeleteMapping("/{id}/delete")
-    public ResponseEntity<Void> deleteCampaignById(@PathVariable("id") Long userId, @PathVariable Long campaignId){
-        Campaign c = campaignService.deleteCampaignById(userId,campaignId);
-        if (c!=null) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Return 403 Forbidden if permission was not granted
+    @DeleteMapping("/{campId}/{userId}")
+    public ResponseEntity<?> deleteCampaignById(@PathVariable("campId") Long campId,@PathVariable("userId") Long userId){
+        if(!donationService.findDonationsByCampaignId(campId))
+        {
+            Campaign camp = campaignService.deleteCampaignById(userId,campId);
+            if(camp!=null){
+                return new ResponseEntity<>("Campaign deleted successfully",HttpStatus.OK);
+            }else{
+                return new ResponseEntity<>("Campaign cant be deleted",HttpStatus.FORBIDDEN);
+            }
+
         }
+        else
+            return new ResponseEntity<>("Deletion failed: Campaign has paid Donations",HttpStatus.FORBIDDEN);
+
+
     }
 }
