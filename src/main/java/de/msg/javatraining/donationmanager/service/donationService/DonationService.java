@@ -66,6 +66,17 @@ public class DonationService {
         donationRepository.save(donation);
     }
 
+    public boolean findDonationsByDonatorId(Long donatorId) {
+        try {
+            List<Donation> donations = donationRepository.findByDonatorId(donatorId);
+            return donations.size() > 0;
+        } catch (IllegalStateException exception) {
+            System.out.println("Donator doesn't have donations or doesn't exist");
+        }
+        return false;
+    }
+
+
     public boolean findDonationsByCampaignId(Long id){
         int counter=0;
         try {
