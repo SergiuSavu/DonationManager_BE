@@ -27,7 +27,7 @@ public class Role {
 	@CollectionTable(
 			name = "role_permission",
 			joinColumns = @JoinColumn(name = "idRole"))
-	@Enumerated(EnumType.STRING)
+	@Enumerated(EnumType.ORDINAL)
 	@Column(name = "idPermission")
 	private Set<PermissionEnum> permissions = new HashSet<>();
 
