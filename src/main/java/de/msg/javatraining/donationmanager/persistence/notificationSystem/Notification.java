@@ -16,6 +16,7 @@ public class Notification {
     @Enumerated(EnumType.STRING)
     private NotificationType type;
     private boolean isRead;
+    private boolean hasAppearedOnView;
 
     private Date createdAt;
 
@@ -25,7 +26,8 @@ public class Notification {
 
     @OneToMany(     // default fetch type = lazy
             cascade = CascadeType.ALL,
-            orphanRemoval = true
+            orphanRemoval = true,
+            fetch = FetchType.EAGER
     )
     @JoinColumn(name = "notification_id")
     private List<NotificationParameter> parameters;
@@ -40,6 +42,13 @@ public class Notification {
         this.parameters = parameters;
 
         this.isRead = false;
+        this.hasAppearedOnView = false;
+    }
+    public void markAsRead() {
+        this.isRead = true;
+    }
+    public void markAsAppeared() {
+        this.hasAppearedOnView = true;
     }
 
     public NotificationType getType() {
@@ -84,5 +93,9 @@ public class Notification {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getId() {
+        return id;
     }
 }

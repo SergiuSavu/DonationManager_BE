@@ -24,6 +24,16 @@ public class NotificationService {
         Notification notification = new Notification(type, new Date(), user, parameters);
         notificationRepository.save(notification);
     }
+    public void markNotificationAsRead(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new RuntimeException("Notification not found"));
+        notification.markAsRead();
+        notificationRepository.save(notification);
+    }
+    public void markNotificationAsAppeared(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new RuntimeException("Notification not found"));
+        notification.markAsAppeared();
+        notificationRepository.save(notification);
+    }
 
     @Scheduled(cron = "0 0 12 * * ?") // Every day at noon
     public void deleteOldNotifications() {
@@ -49,4 +59,12 @@ public class NotificationService {
 //        cal.add(Calendar.MINUTE, -5); // Let's say 5 minutes for this example
 //        return cal.getTime();
 //    }
+
+    public List<Notification> getNotificationsNotAppearedOnView(Long userId) {
+        return notificationRepository.getNotificationsNotAppearedOnView(userId);
+    }
+
+    public List<Notification> getAllNotifications(Long userId) {
+        return notificationRepository.getAllNotifications(userId);
+    }
 }

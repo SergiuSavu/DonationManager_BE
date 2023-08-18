@@ -15,8 +15,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Query("select n from Notification n where n.user.id=:id order by n.createdAt desc")
     List<Notification> getAllNotifications(@Param("id") Long id);
 
-    @Query("select n from Notification n where n.user.id=:id and n.isRead=false order by n.createdAt desc")
-    List<Notification> getNotReadNotifications(@Param("id") Long id);
+    @Query("select n from Notification n where n.user.id=:id and n.hasAppearedOnView=false order by n.createdAt desc")
+    List<Notification> getNotificationsNotAppearedOnView(@Param("id") Long id);
 
     @Modifying
     @Query("delete from Notification n where n.createdAt<?1")
