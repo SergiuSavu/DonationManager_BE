@@ -58,14 +58,14 @@ public class DonationService {
         return false;
     }
 
-    private boolean checkDonationStatus(Long id) {
-        Donation donation = donationRepository.findById(id)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Donation with id: " + id + " does not exist!"
-                ));
-        System.out.println(donation.isApproved()); // de-bugging purposes
-        return donation.isApproved();
-    }
+//    public boolean checkDonationStatus(Long id) {
+//        Donation donation = donationRepository.findById(id)
+//                .orElseThrow(() -> new IllegalStateException(
+//                        "Donation with id: " + id + " does not exist!"
+//                ));
+//        //System.out.println(donation.isApproved()); // de-bugging purposes
+//        return donation.isApproved();
+//    }
 
     public List<Donation> getAllDonations() {
         return donationRepository.findAll();
@@ -101,18 +101,33 @@ public class DonationService {
         if (donationId == null) {
             throw new IllegalArgumentException("DonationId cannot be null!");
         }
-        if (!checkDonationStatus(donationId)) {
-            if (checkUserPermission(userId, permission)) {
-                Donation donation = donationRepository.findById(donationId)
-                        .orElseThrow(() -> new EntityNotFoundException("Donation with id: " + donationId + " not found!"));
-                donationRepository.deleteById(donationId);
-                return donation;
+        Optional<Donation> donation = donationRepository.findById(donationId);
+        if (donation.isPresent()) {
+            if (!donation.get().isApproved()) {
+                if (checkUserPermission(userId, permission)) {
+                    donationRepository.deleteById(donationId);
+                    return donation.get();
+                } else {
+                    throw new IllegalArgumentException("User does not have permission to delete a donation!");
+                }
             } else {
-                throw new IllegalArgumentException("User does not have permission to delete a donation!");
+                throw new IllegalArgumentException("Donation has already been approved! Can't delete an approved donation!");
             }
         } else {
-            throw new IllegalArgumentException("Donation has already been approved! Can't delete an approved donation!");
+            throw new EntityNotFoundException("Donation does not exist!");
         }
+//        if (!checkDonationStatus(donationId)) {
+//            if (checkUserPermission(userId, permission)) {
+//                Donation donation = donationRepository.findById(donationId)
+//                        .orElseThrow(() -> new EntityNotFoundException("Donation with id: " + donationId + " not found!"));
+//                donationRepository.deleteById(donationId);
+//                return donation;
+//            } else {
+//                throw new IllegalArgumentException("User does not have permission to delete a donation!");
+//            }
+//        } else {
+//            throw new IllegalArgumentException("Donation has already been approved! Can't delete an approved donation!");
+//        }
     }
 
     public Donation updateDonation(Long userId, Long donationId, Donation updatedDonation) {
@@ -121,38 +136,43 @@ public class DonationService {
         }
         if (checkDonationRequirements(updatedDonation)) {
             if (checkUserPermission(userId, permission)) {
-                if (checkDonationStatus(donationId)) {
-                    Donation donation = donationRepository.findById(donationId)
-                            .orElseThrow(() -> new IllegalStateException(
-                                    "Donation with id: " + donationId + " does not exist!"
-                            ));
-                    if (updatedDonation.getAmount() != 0) {
-                        donation.setAmount(updatedDonation.getAmount());
+                //if (!checkDonationStatus(donationId)) {
+//                    Donation donation = donationRepository.findById(donationId)
+//                            .orElseThrow(() -> new IllegalStateException(
+//                                    "Donation with id: " + donationId + " does not exist!"
+//                            ));
+                    Optional<Donation> donation = donationRepository.findById(donationId);
+                    if (donation.isPresent()) {
+                        if (!donation.get().isApproved()) {
+                            if (updatedDonation.getAmount() != 0) {
+                                donation.get().setAmount(updatedDonation.getAmount());
+                            }
+                            if (updatedDonation.getCurrency() != null) {
+                                donation.get().setCurrency(updatedDonation.getCurrency());
+                            }
+                            if (updatedDonation.getCampaign() != null) {
+                                donation.get().setCampaign(updatedDonation.getCampaign());
+                            }
+                            if (updatedDonation.getDonator() != null) {
+                                donation.get().setDonator(updatedDonation.getDonator());
+                            }
+                            if (updatedDonation.getNotes() != null) {
+                                donation.get().setNotes(updatedDonation.getNotes());
+                            }
+                            if (updatedDonation.getCreatedDate() != null) {
+                                donation.get().setCreatedDate(updatedDonation.getCreatedDate());
+                            }
+                            if (updatedDonation.getCreatedBy() != null) {
+                                donation.get().setCreatedBy(updatedDonation.getCreatedBy());
+                            }
+                            donationRepository.save(donation.get());
+                            return donation.get();
+                        } else {
+                            throw new IllegalArgumentException("Can't modify an approved donation!");
+                        }
+                    } else {
+                        throw new IllegalArgumentException("Donation does not exist!");
                     }
-                    if (updatedDonation.getCurrency() != null) {
-                        donation.setCurrency(updatedDonation.getCurrency());
-                    }
-                    if (updatedDonation.getCampaign() != null) {
-                        donation.setCampaign(updatedDonation.getCampaign());
-                    }
-                    if (updatedDonation.getDonator() != null) {
-                        donation.setDonator(updatedDonation.getDonator());
-                    }
-                    if (updatedDonation.getNotes() != null) {
-                        donation.setNotes(updatedDonation.getNotes());
-                    }
-                    if (updatedDonation.getCreatedDate() != null) {
-                        donation.setCreatedDate(updatedDonation.getCreatedDate());
-                    }
-                    if (updatedDonation.getCreatedBy() != null) {
-                        donation.setCreatedBy(updatedDonation.getCreatedBy());
-                    }
-                    donationRepository.save(donation);
-                    return donation;
-                } else {
-                    throw new IllegalArgumentException("Can't modify an approved donation!");
-                }
-
             } else {
                 throw new IllegalArgumentException("No permission to modify a donation!");
             }
