@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -26,8 +28,10 @@ public class Role {
 	@ElementCollection(targetClass = PermissionEnum.class)
 	@CollectionTable(
 			name = "role_permission",
-			joinColumns = @JoinColumn(name = "idRole"))
-	@Enumerated(EnumType.STRING)
+			joinColumns = @JoinColumn(name = "idRole")
+	)
+	@Fetch(FetchMode.JOIN)
+	@Enumerated(EnumType.ORDINAL)
 	@Column(name = "idPermission")
 	private Set<PermissionEnum> permissions = new HashSet<>();
 
