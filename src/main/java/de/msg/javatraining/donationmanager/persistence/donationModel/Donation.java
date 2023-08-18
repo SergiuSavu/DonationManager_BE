@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 import java.util.Date;
 
 @Data
@@ -37,7 +39,8 @@ public class Donation {
 
     private Date approveDate;
     private String notes;
-    private Date createdDate;
+    private LocalDate createdDate;
+    private boolean approved;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "approvedBy")
