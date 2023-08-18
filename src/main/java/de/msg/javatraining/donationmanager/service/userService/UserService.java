@@ -1,7 +1,6 @@
 package de.msg.javatraining.donationmanager.service.userService;
 
 import de.msg.javatraining.donationmanager.controller.dto.UserDTO;
-import de.msg.javatraining.donationmanager.persistence.model.emailRequest.EmailRequest;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
 import de.msg.javatraining.donationmanager.service.emailService.EmailService;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class UserService {
@@ -173,12 +171,19 @@ public class UserService {
             if(newUser.getPassword() != null){
                 user.setPassword(passwordEncoder.encode(newUser.getPassword()));
             }
-            if(newUser.getRoles() != null){
+            if(!newUser.getRoles().isEmpty()){
                 user.setRoles(newUser.getRoles());
             }
-            if(newUser.getCampaigns() != null){
+            if(!newUser.getCampaigns().isEmpty() ){
                 user.setCampaigns(newUser.getCampaigns());
             }
+            if(newUser.isActive() != user.isActive()){
+                user.setActive(newUser.isActive());
+                if(user.isActive()) {
+                    user.setRetryCount(0);
+                }
+            }
+
             userRepository.save(user);
         }
         catch(IllegalStateException e) {
@@ -196,13 +201,13 @@ public class UserService {
                 throw new IllegalStateException("Mobile number already in use.");
             }
 
-            if (!user.getMobileNumber().matches("^(?:\\+?40|0)?7\\d{8}$")) {
-                throw new IllegalArgumentException("Mobile number is not valid.");
-            }
-
-            if (!user.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
-                throw new IllegalArgumentException("Email is not valid.");
-            }
+//            if (!user.getMobileNumber().matches("^(?:\\+?40|0)?7\\d{8}$")) {
+//                throw new IllegalArgumentException("Mobile number is not valid.");
+//            }
+//
+//            if (!user.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+//                throw new IllegalArgumentException("Email is not valid.");
+//            }
     }
 
     public ResponseEntity<?> getUserById(Long id) {

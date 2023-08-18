@@ -28,11 +28,10 @@ public class Role {
 	@ElementCollection(targetClass = PermissionEnum.class)
 	@CollectionTable(
 			name = "role_permission",
-			joinColumns = @JoinColumn(name = "idRole")
-	)
+			joinColumns = @JoinColumn(name = "idRole"))
+	@Enumerated(EnumType.STRING)
 	@Fetch(FetchMode.JOIN)
-	@Enumerated(EnumType.ORDINAL)
-	@Column(name = "idPermission")
+	@Column(name = "Permission")
 	private Set<PermissionEnum> permissions = new HashSet<>();
 
 }

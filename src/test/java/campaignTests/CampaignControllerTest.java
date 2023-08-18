@@ -85,7 +85,7 @@ public class CampaignControllerTest {
         Long campId = 2L;
 
         when(donationService.findDonationsByCampaignId(eq(campId))).thenReturn(false);
-        when(campaignService.deleteCampaignById(eq(campId), eq(userId))).thenReturn(new Campaign());
+        when(campaignService.deleteCampaignById(eq(userId), eq(campId))).thenReturn(new Campaign());
 
         ResponseEntity<?> response = campaignController.deleteCampaignById(campId, userId);
 
@@ -105,6 +105,6 @@ public class CampaignControllerTest {
 
         assertNotNull(response);
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertEquals("Campaign has paid Donations", response.getBody());
+        assertEquals("Deletion failed: Campaign has paid Donations", response.getBody());
     }
 }
