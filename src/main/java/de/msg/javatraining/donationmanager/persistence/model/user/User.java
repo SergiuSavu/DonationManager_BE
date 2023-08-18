@@ -50,5 +50,7 @@ public class User {
 	)
 	private Set<Campaign> campaigns = new HashSet<>();
 
-
+	public Set<Campaign> getCampaigns() {
+		return campaigns;
+	}
 }

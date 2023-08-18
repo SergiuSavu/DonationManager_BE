@@ -13,7 +13,7 @@ public interface DonatorRepository extends JpaRepository<Donator, Long> {
     @Override
     List<Donator> findAll();
 
-    @Query("delete from Donator d where d.id=:id")
-    @Modifying
-    Optional<Donator> deleteDonatorById(Long id);
+//    @Query("delete from Donator d where d.id=:id")
+//    @Modifying
+//    Optional<Donator> deleteDonatorById(Long id);
 }

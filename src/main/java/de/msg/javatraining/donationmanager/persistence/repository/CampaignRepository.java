@@ -15,4 +15,6 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long> {
     List<Campaign> findAll();
     Campaign findCampaignByName(String name);
 
+    Campaign findCampaignById(Long id);
+
 }
