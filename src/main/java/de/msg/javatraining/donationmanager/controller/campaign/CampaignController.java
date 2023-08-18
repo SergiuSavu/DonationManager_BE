@@ -70,4 +70,22 @@ public class CampaignController {
 
 
     }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<?> deleteCampaignByCampaign(@RequestBody Campaign campaign,@PathVariable("userId") Long userId){
+        if(!donationService.findDonationsByCampaignId(campaign.getId()))
+        {
+            Campaign camp = campaignService.deleteCampaignById(userId,campaign.getId());
+            if(camp!=null){
+                return new ResponseEntity<>("Campaign deleted successfully",HttpStatus.OK);
+            }else{
+                return new ResponseEntity<>("Campaign cant be deleted",HttpStatus.FORBIDDEN);
+            }
+
+        }
+        else
+            return new ResponseEntity<>("Deletion failed: Campaign has paid Donations",HttpStatus.FORBIDDEN);
+
+
+    }
 }

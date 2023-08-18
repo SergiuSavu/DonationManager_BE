@@ -74,7 +74,7 @@ public class DonatorService {
         if (checkUserPermission(userId, permission)) {
             Donator donator = donatorRepository.findById(donatorId)
                     .orElseThrow(() -> new EntityNotFoundException("Donator with ID: " + donatorId + " not found."));
-            donatorRepository.deleteDonatorById(donatorId);
+            donatorRepository.deleteById(donatorId); //inainte era deleteDonatorByID
             return donator;
         }
         else {

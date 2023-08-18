@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class CampaignService {
@@ -48,8 +49,9 @@ public class CampaignService {
                         return campaign;
                     }
                 }
-                else throw new IllegalArgumentException("No permission to create a new campaign. ");
         }
+            throw new IllegalArgumentException("No permission to create a new campaign. ");
+
     }
         throw new IllegalArgumentException("User not found.");
     }
@@ -62,11 +64,13 @@ public class CampaignService {
         if (name == null || purpose == null)
             throw new IllegalArgumentException("Name or purpose cannot be null");
 
-        if(campaignRepository.findCampaignByName(name) != null){
-            throw new IllegalArgumentException("Not a unique name");
-        }
+
+
         Optional<User> userADMIN = userRepository.findById(userId);
 
+        if(campaignRepository.findCampaignByName(name) != null && userADMIN.getClass().getName().equals(name)){
+            throw new IllegalArgumentException("Not a unique name");
+        }
         if (userADMIN.isPresent()) {
             PermissionEnum adminPermissionToCheck = PermissionEnum.CAMP_MANAGEMENT;
             for (Role adminRole : userADMIN.get().getRoles()) {
@@ -81,9 +85,10 @@ public class CampaignService {
                     else throw new IllegalArgumentException("Campaign not found.");
 
                 }
-                else throw new IllegalArgumentException("No permission to modify a  campaign. ");
 
             }
+            throw new IllegalArgumentException("No permission to modify a  campaign. ");
+
         }
         throw new IllegalArgumentException("User not found1.");
     }
@@ -92,6 +97,19 @@ public class CampaignService {
         if(userId == null || campaignId == null){
             throw new IllegalArgumentException("User ID or campaign ID cannot be null.");
         }
+
+        //fiecare user are un campaign List deci trebuie sa gasim Userul care are Id ul campaniei
+        Campaign toDeleteCampaign= campaignRepository.findCampaignById(campaignId);
+        List<User> users = userRepository.findAll();
+        for (User user : users) {
+            Set<Campaign> userCampaigns = user.getCampaigns();
+            if (userCampaigns.contains(toDeleteCampaign)) {
+                userCampaigns.remove(toDeleteCampaign);
+                userRepository.save(user); // Update the user entity
+            }
+        }
+
+
 
         Optional<User> userADMIN = userRepository.findById(userId);
         if (userADMIN.isPresent()) {
@@ -105,9 +123,10 @@ public class CampaignService {
                     }
                     else throw new IllegalArgumentException("Campaign not found.");
                 }
-                else throw new IllegalArgumentException("No permission to delete a campaign. ");
 
             }
+            throw new IllegalArgumentException("No permission to delete a campaign. ");
+
         }
         throw new IllegalArgumentException("User not found.");
     }
