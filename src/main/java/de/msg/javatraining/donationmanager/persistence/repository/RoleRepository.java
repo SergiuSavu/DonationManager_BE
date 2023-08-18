@@ -24,6 +24,7 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
   void deleteById(Integer id);
 
   // Find all roles
+  @Override
   List<Role> findAll();
 
 }

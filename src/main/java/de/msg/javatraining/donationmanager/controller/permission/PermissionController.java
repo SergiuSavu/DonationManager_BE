@@ -1,5 +1,6 @@
 package de.msg.javatraining.donationmanager.controller.permission;
 
+import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
 import de.msg.javatraining.donationmanager.persistence.model.PermissionEnum;
 import de.msg.javatraining.donationmanager.persistence.model.Role;
 import de.msg.javatraining.donationmanager.service.permissionService.PermissionService;
@@ -8,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/permissions")
 public class PermissionController {
@@ -15,6 +18,17 @@ public class PermissionController {
 
     @Autowired
     private PermissionService permissionService;
+
+
+    @GetMapping("/all")
+    public List<PermissionEnum> getAllPermissions(){
+        return permissionService.getAllPermissions();
+    }
+
+    @GetMapping("/{roleId}/all")
+    public List<PermissionEnum> getAllPermissions(@PathVariable Long roleId){
+        return permissionService.getAllPermissions(roleId);
+    }
 
     @PostMapping("/{userId}/add")
     public ResponseEntity<Void> addPermissionToRole(@PathVariable Long userId, @RequestBody Role role, @RequestBody PermissionEnum permission) {

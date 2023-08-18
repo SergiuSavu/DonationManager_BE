@@ -5,13 +5,10 @@ import de.msg.javatraining.donationmanager.persistence.model.Role;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.persistence.repository.RoleRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
-import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class PermissionService {
@@ -22,8 +19,14 @@ public class PermissionService {
     @Autowired
     private RoleRepository roleRepository;
 
-    //@Autowired
-    //private PermissionRepository permissionRepository;
+    public List<PermissionEnum> getAllPermissions(){
+        return Arrays.stream(PermissionEnum.values()).toList();
+    }
+
+    public List<PermissionEnum> getAllPermissions(Long roleId){
+        Optional<Role> role = roleRepository.findById(roleId);
+        return role.get().getPermissions().stream().toList();
+    }
 
     public PermissionEnum addPermissionToRole(Long userId, Role role, PermissionEnum permissionToAdd) {
   
