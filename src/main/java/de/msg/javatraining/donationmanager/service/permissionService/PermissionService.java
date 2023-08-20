@@ -28,7 +28,7 @@ public class PermissionService {
         return role.get().getPermissions().stream().toList();
     }
 
-    public PermissionEnum addPermissionToRole(Long userId, Role role, PermissionEnum permissionToAdd) {
+    public PermissionEnum addPermissionToRole(Long userId, Integer roleId, PermissionEnum permissionToAdd) {
   
         if (permissionToAdd == null) {
             throw new IllegalArgumentException("Permission to add cannot be null.");
@@ -41,17 +41,20 @@ public class PermissionService {
         //}
 
         Optional<User> userADMIN = userRepository.findById(userId);
+        Optional<Role> role = roleRepository.findById(roleId);
 
         if (userADMIN.isPresent()) {
             PermissionEnum adminPermissionToCheck = PermissionEnum.PERMISSION_MANAGEMENT;
 
             for (Role adminRole : userADMIN.get().getRoles()) {
                 if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
-                    if (role.getPermissions().contains(permissionToAdd)) {
+                    if (role.get().getPermissions().contains(permissionToAdd)) {
                         throw new NullPointerException("Permission already exists.");}
                     else {
-                        role.getPermissions().add(permissionToAdd);
-                        roleRepository.save(role);
+                        Set<PermissionEnum> permissions = role.get().getPermissions();
+                        permissions.add(permissionToAdd);
+                        role.get().setPermissions(permissions);
+                        roleRepository.save(role.get());
                         return permissionToAdd;
                     }
                 }
@@ -61,7 +64,7 @@ public class PermissionService {
     }
 
 
-    public PermissionEnum deletePermissionFromRole(Long userId, Role role, PermissionEnum permissionToDelete) {
+    public PermissionEnum deletePermissionFromRole(Long userId, Integer roleId, PermissionEnum permissionToDelete) {
         if (userId == null || permissionToDelete == null) {
             throw new IllegalArgumentException("User ID and permission to delete cannot be null.");
         }
@@ -73,15 +76,18 @@ public class PermissionService {
         //}
 
         Optional<User> userADMIN = userRepository.findById(userId);
+        Optional<Role> role = roleRepository.findById(roleId);
 
         if (userADMIN.isPresent()) {
             PermissionEnum adminPermissionToCheck = PermissionEnum.PERMISSION_MANAGEMENT;
 
             for (Role adminRole : userADMIN.get().getRoles()) {
                 if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
-                    if (role.getPermissions().contains(permissionToDelete)) {
-                        role.getPermissions().remove(permissionToDelete);
-                        roleRepository.save(role);
+                    if (role.get().getPermissions().contains(permissionToDelete)) {
+                        Set<PermissionEnum> permissions = role.get().getPermissions();
+                        permissions.remove(permissionToDelete);
+                        role.get().setPermissions(permissions);
+                        roleRepository.save(role.get());
                         return permissionToDelete;
                     } else {
                         throw new IllegalArgumentException("Permission to delete does not exist.");
