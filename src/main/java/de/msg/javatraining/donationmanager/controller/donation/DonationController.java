@@ -1,7 +1,7 @@
 package de.msg.javatraining.donationmanager.controller.donation;
 
 import de.msg.javatraining.donationmanager.persistence.donationModel.Donation;
-import de.msg.javatraining.donationmanager.persistence.donatorModel.Donator;
+import de.msg.javatraining.donationmanager.exceptions.donation.DonationNotFoundException;
 import de.msg.javatraining.donationmanager.service.donationService.DonationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,42 +24,43 @@ public class DonationController {
     }
 
     @GetMapping("/{donationId}")
-    public Optional<Donation> getDonation(@PathVariable("donationId") Long donationId) {
+    public ResponseEntity<?> getDonation(@PathVariable("donationId") Long donationId) throws DonationNotFoundException {
         return donationService.getDonationById(donationId);
     }
 
     @PostMapping("/{donatorId}/{campaignId}/{userId}")
     public ResponseEntity<?> createDonation(@PathVariable("userId") Long userId, @PathVariable("donatorId") Long donatorId, @PathVariable("campaignId") Long campaignId, @RequestBody Donation donation) {
-        Donation don = donationService.createDonation(userId, donatorId, campaignId, donation);
-        if (don != null) {
-            return ResponseEntity.ok().build();
+        ResponseEntity<?> don = donationService.createDonation(userId, donatorId, campaignId, donation);
+        if (don.getStatusCode() == HttpStatus.OK) {
+            return ResponseEntity.ok("Donation created successfully!");
         } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Donation has not been created!");
         }
     }
 
     @PutMapping("/{donationId}/{userId}")
     public ResponseEntity<?> updateDonation(@PathVariable("userId") Long userId, @PathVariable("donationId") Long donationId, @RequestBody Donation newDonation) {
-        Donation don = donationService.updateDonation(userId, donationId, newDonation);
-        if (don != null) {
-            return ResponseEntity.ok().build();
+        ResponseEntity<?> don = donationService.updateDonation(userId, donationId, newDonation);
+        if (don.getStatusCode() == HttpStatus.OK) {
+            return ResponseEntity.ok("Donation updated successfully!");
         } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Donation has not been updated!");
         }
     }
 
     @DeleteMapping("/{donationId}/{userId}")
-    public ResponseEntity<?> deleteDonationById(@PathVariable("userId") Long userId, @PathVariable("donationId") Long donationId) {
-        Optional<Donation> donation = donationService.getDonationById(donationId);
+    public ResponseEntity<?> deleteDonationById(@PathVariable("userId") Long userId, @PathVariable("donationId") Long donationId) throws DonationNotFoundException {
+        Optional<Donation> donation = (Optional<Donation>) donationService.getDonationById(donationId).getBody();
+        //ResponseEntity<?> donation = donationService.getDonationById(donationId);
         if (donation.isPresent()) {
             if (!donation.get().isApproved()) {
                 donationService.deleteDonationById(userId, donationId);
-                return new ResponseEntity<>("Donation has been successfully deleted!", HttpStatus.OK);
+                return ResponseEntity.ok("Donation has been successfully deleted!");
             } else {
-                return new ResponseEntity<>("Can't delete a donation which has been approved!", HttpStatus.FORBIDDEN);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Can't delete a donation which has been approved!");
             }
         } else {
-            return new ResponseEntity<>("Donation with given id does not exist!", HttpStatus.FORBIDDEN);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Donation with given id does not exist!");
         }
     }
 }

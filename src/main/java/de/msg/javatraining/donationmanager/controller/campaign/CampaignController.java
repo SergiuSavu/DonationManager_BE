@@ -28,11 +28,11 @@ public class CampaignController {
     @PostMapping("/{userId}") ///campaign/userId
     public ResponseEntity<?> createCapmaign(@PathVariable Long userId,@RequestBody Campaign campaign){
 
-        Campaign camp = campaignService.createCampaign(userId,campaign.getName(),campaign.getPurpose());
-        if(camp!=null){
-            return ResponseEntity.ok().build();
+        ResponseEntity<?> camp = campaignService.createCampaign(userId,campaign.getName(),campaign.getPurpose());
+        if(camp.getStatusCode() == HttpStatus.OK){
+            return ResponseEntity.ok("Campaign created successfully!");
         }else{
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Campaign has not been created!");
         }
 
 
@@ -44,12 +44,12 @@ public class CampaignController {
 
 
 
-        Campaign camp =campaignService.updateCampaign(userId,campId, newCampaign.getName(), newCampaign.getPurpose());
+        ResponseEntity<?> camp =campaignService.updateCampaign(userId,campId, newCampaign.getName(), newCampaign.getPurpose());
 
-            if(camp!=null){
-                return ResponseEntity.ok().build();
+            if(camp.getStatusCode() == HttpStatus.OK){
+                return ResponseEntity.ok("Campaign updated successfully!");
             }else{
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Campaign has not been updated!");
             }
     }
 
@@ -57,17 +57,15 @@ public class CampaignController {
     public ResponseEntity<?> deleteCampaignById(@PathVariable("campId") Long campId,@PathVariable("userId") Long userId){
         if(!donationService.findDonationsByCampaignId(campId))
         {
-            Campaign camp = campaignService.deleteCampaignById(userId,campId);
-            if(camp!=null){
-                return new ResponseEntity<>("Campaign deleted successfully",HttpStatus.OK);
+            ResponseEntity<?> camp = campaignService.deleteCampaignById(userId,campId);
+            if(camp.getStatusCode() == HttpStatus.OK){
+                return ResponseEntity.ok("Campaign has been deleted!");
             }else{
-                return new ResponseEntity<>("Campaign cant be deleted",HttpStatus.FORBIDDEN);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Campaign can't be deleted!");
             }
 
         }
         else
-            return new ResponseEntity<>("Deletion failed: Campaign has paid Donations",HttpStatus.FORBIDDEN);
-
-
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Deletion failed: Campaign has paid Donations!");
     }
 }
