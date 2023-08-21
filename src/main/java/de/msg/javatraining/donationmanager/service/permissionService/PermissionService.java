@@ -28,7 +28,7 @@ public class PermissionService {
         return role.get().getPermissions().stream().toList();
     }
 
-    public PermissionEnum addPermissionToRole(Long userId, Integer roleId, PermissionEnum permissionToAdd) {
+    public Role addPermissionToRole(Long userId, Integer roleId, PermissionEnum permissionToAdd) {
   
         if (permissionToAdd == null) {
             throw new IllegalArgumentException("Permission to add cannot be null.");
@@ -54,8 +54,8 @@ public class PermissionService {
                         Set<PermissionEnum> permissions = role.get().getPermissions();
                         permissions.add(permissionToAdd);
                         role.get().setPermissions(permissions);
-                        roleRepository.save(role.get());
-                        return permissionToAdd;
+                        return roleRepository.save(role.get());
+                        //return permissionToAdd;
                     }
                 }
             }
@@ -64,7 +64,7 @@ public class PermissionService {
     }
 
 
-    public PermissionEnum deletePermissionFromRole(Long userId, Integer roleId, PermissionEnum permissionToDelete) {
+    public Role deletePermissionFromRole(Long userId, Integer roleId, PermissionEnum permissionToDelete) {
         if (userId == null || permissionToDelete == null) {
             throw new IllegalArgumentException("User ID and permission to delete cannot be null.");
         }
@@ -87,8 +87,8 @@ public class PermissionService {
                         Set<PermissionEnum> permissions = role.get().getPermissions();
                         permissions.remove(permissionToDelete);
                         role.get().setPermissions(permissions);
-                        roleRepository.save(role.get());
-                        return permissionToDelete;
+                        return roleRepository.save(role.get());
+                        //return permissionToDelete;
                     } else {
                         throw new IllegalArgumentException("Permission to delete does not exist.");
                     }
