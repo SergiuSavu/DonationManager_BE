@@ -43,7 +43,7 @@ public class PermissionController {
         }
     }
 
-    @PostMapping("/{roleId}/{userId}/delete")
+    @DeleteMapping("/{roleId}/{userId}/delete")
     public ResponseEntity<Void> deletePermissionFromRole(@PathVariable("userId") Long userId, @PathVariable("roleId") Integer roleId, @RequestBody PermissionEnum permission) {
         PermissionEnum p = permissionService.deletePermissionFromRole(userId, roleId, permission);
 
