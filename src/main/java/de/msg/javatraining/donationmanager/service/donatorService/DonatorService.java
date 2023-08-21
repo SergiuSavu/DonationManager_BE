@@ -65,7 +65,7 @@ public class DonatorService {
             }
             donator = donatorRepository.findById(id).get();
         } catch (DonatorNotFoundException exception) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(exception.getMessage());
+            return ResponseEntity.ok(exception.getMessage());
         }
         return ResponseEntity.ok(donator);
     }
@@ -97,7 +97,7 @@ public class DonatorService {
                 throw new DonatorRequirementsException();
             }
         } catch (UserPermissionException | DonatorRequirementsException exception) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(exception.getMessage());
+            return ResponseEntity.ok(exception.getMessage());
         }
     }
 
@@ -135,7 +135,7 @@ public class DonatorService {
         } catch (DonatorIdException
                  | UserPermissionException
                  | DonatorNotFoundException exception) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(exception.getMessage());
+            return ResponseEntity.ok(exception.getMessage());
         }
     }
 
@@ -205,7 +205,7 @@ public class DonatorService {
                  | DonatorNotFoundException
                  | UserPermissionException
                  | DonatorRequirementsException exception) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(exception.getMessage());
+            return ResponseEntity.ok(exception.getMessage());
         }
     }
 }

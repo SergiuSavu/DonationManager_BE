@@ -34,7 +34,7 @@ public class DonationController {
         if (don.getStatusCode() == HttpStatus.OK) {
             return ResponseEntity.ok("Donation created successfully!");
         } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Donation has not been created!");
+            return ResponseEntity.ok("Donation has not been created!");
         }
     }
 
@@ -44,7 +44,7 @@ public class DonationController {
         if (don.getStatusCode() == HttpStatus.OK) {
             return ResponseEntity.ok("Donation updated successfully!");
         } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Donation has not been updated!");
+            return ResponseEntity.ok("Donation has not been updated!");
         }
     }
 
@@ -57,10 +57,10 @@ public class DonationController {
                 donationService.deleteDonationById(userId, donationId);
                 return ResponseEntity.ok("Donation has been successfully deleted!");
             } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Can't delete a donation which has been approved!");
+                return ResponseEntity.ok("Can't delete a donation which has been approved!");
             }
         } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Donation with given id does not exist!");
+            return ResponseEntity.ok("Donation with given id does not exist!");
         }
     }
 }

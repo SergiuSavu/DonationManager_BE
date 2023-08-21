@@ -97,7 +97,7 @@ public class DonationService {
             }
             donation = donationRepository.findById(id).get();
         } catch (DonationNotFoundException exception) {
-            return new ResponseEntity<>(exception.getMessage(), HttpStatus.FORBIDDEN);
+            return ResponseEntity.ok(exception.getMessage());
         }
         return ResponseEntity.ok(donation);
     }
@@ -181,7 +181,7 @@ public class DonationService {
                 throw new IllegalArgumentException();
             }
         } catch (DonationRequirementsException | UserPermissionException | IllegalArgumentException exception) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(exception.getMessage());
+            return ResponseEntity.ok(exception.getMessage());
         }
     }
 
@@ -243,7 +243,7 @@ public class DonationService {
                  | UserPermissionException
                  | DonationApprovedException
                  | DonationNotFoundException exception) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(exception.getMessage());
+            return ResponseEntity.ok(exception.getMessage());
         }
     }
 
@@ -348,7 +348,7 @@ public class DonationService {
                  | DonationNotFoundException
                  | UserPermissionException
                  | DonationRequirementsException exception) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(exception.getMessage());
+            return ResponseEntity.ok(exception.getMessage());
         }
     }
 

@@ -32,7 +32,7 @@ public class CampaignController {
         if(camp.getStatusCode() == HttpStatus.OK){
             return ResponseEntity.ok("Campaign created successfully!");
         }else{
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Campaign has not been created!");
+            return ResponseEntity.ok("Campaign has not been created!");
         }
 
 
@@ -49,7 +49,7 @@ public class CampaignController {
             if(camp.getStatusCode() == HttpStatus.OK){
                 return ResponseEntity.ok("Campaign updated successfully!");
             }else{
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Campaign has not been updated!");
+                return ResponseEntity.ok("Campaign has not been updated!");
             }
     }
 
@@ -61,11 +61,11 @@ public class CampaignController {
             if(camp.getStatusCode() == HttpStatus.OK){
                 return ResponseEntity.ok("Campaign has been deleted!");
             }else{
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Campaign can't be deleted!");
+                return ResponseEntity.ok("Campaign can't be deleted!");
             }
 
         }
         else
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Deletion failed: Campaign has paid Donations!");
+            return ResponseEntity.ok("Deletion failed: Campaign has paid Donations!");
     }
 }

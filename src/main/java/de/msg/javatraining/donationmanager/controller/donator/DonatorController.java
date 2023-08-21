@@ -35,7 +35,7 @@ public class DonatorController {
         if (don.getStatusCode() == HttpStatus.OK) {
             return ResponseEntity.ok("Donator created successfully!");
         } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Donator has not been created!");
+            return ResponseEntity.ok("Donator has not been created!");
         }
     }
 
@@ -45,7 +45,7 @@ public class DonatorController {
         if (don.getStatusCode() == HttpStatus.OK) {
             return ResponseEntity.ok("Donator updated successfully");
         } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Donator has not been updated!");
+            return ResponseEntity.ok("Donator has not been updated!");
         }
     }
 
@@ -62,6 +62,6 @@ public class DonatorController {
                 return ResponseEntity.ok("Donator values have been deleted!");
             }
         }
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Donator with given id does not exist!");
+        return ResponseEntity.ok("Donator with given id does not exist!");
     }
 }

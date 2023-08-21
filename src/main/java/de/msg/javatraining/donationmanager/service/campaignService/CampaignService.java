@@ -73,7 +73,7 @@ public class CampaignService {
                  | CampaignNameException
                  | UserPermissionException
                  | UserNotFoundException exception) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(exception.getMessage());
+            return ResponseEntity.ok(exception.getMessage());
         }
     }
 
@@ -155,7 +155,7 @@ public class CampaignService {
                  | CampaignNotFoundException
                  | UserPermissionException
                  | UserNotFoundException exception) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(exception.getMessage());
+            return ResponseEntity.ok(exception.getMessage());
         }
     }
 
@@ -224,7 +224,7 @@ public class CampaignService {
             }
             throw new UserNotFoundException();
         } catch (UserIdException | CampaignIdException | CampaignNotFoundException | UserPermissionException | UserNotFoundException exception) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(exception.getMessage());
+            return ResponseEntity.ok(exception.getMessage());
         }
     }
 
