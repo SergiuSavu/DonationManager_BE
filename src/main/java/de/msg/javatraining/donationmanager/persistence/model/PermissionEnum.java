@@ -61,6 +61,5 @@ public enum PermissionEnum /*implements Serializable*/ {
     public PermissionEnum PermissionEnum(String type){
         return valueOf(type);
     }*/
-
 }
 
