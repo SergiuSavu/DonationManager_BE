@@ -57,17 +57,25 @@ public class DonatorService {
 //                .orElseThrow(() -> new IllegalStateException("Donator with id: " + id + " does not exist.")));
 //    }
 
-    public ResponseEntity<?> getDonatorById(Long id) {
-        Donator donator;
-        try {
-            if (donatorRepository.findById(id).isEmpty()) {
-                throw new DonatorNotFoundException();
-            }
-            donator = donatorRepository.findById(id).get();
-        } catch (DonatorNotFoundException exception) {
-            return ResponseEntity.ok(exception.getMessage());
-        }
-        return ResponseEntity.ok(donator);
+
+    // Asta este buna
+//    public ResponseEntity<?> getDonatorById(Long id) {
+//        Donator donator;
+//        try {
+//            if (donatorRepository.findById(id).isEmpty()) {
+//                throw new DonatorNotFoundException();
+//            }
+//            donator = donatorRepository.findById(id).get();
+//        } catch (DonatorNotFoundException exception) {
+//            return ResponseEntity.ok(exception.getMessage());
+//        }
+//        return ResponseEntity.ok(donator);
+//    }
+
+    public Donator getDonatorById(Long id) throws DonatorNotFoundException {
+        Donator donator = donatorRepository.findById(id)
+                .orElseThrow(DonatorNotFoundException::new);
+        return donator;
     }
 
 
@@ -84,22 +92,38 @@ public class DonatorService {
 //        }
 //    }
 
-    public ResponseEntity<?> createDonator(Long userId, Donator donator) {
-        try {
-            if (checkDonatorRequirements(donator)) {
-                if (checkUserPermission(userId, permission)) {
-                    donatorRepository.save(donator);
-                    return ResponseEntity.ok(donator);
-                } else {
-                    throw new UserPermissionException();
-                }
+//    public ResponseEntity<?> createDonator(Long userId, Donator donator) {
+//        try {
+//            if (checkDonatorRequirements(donator)) {
+//                if (checkUserPermission(userId, permission)) {
+//                    donatorRepository.save(donator);
+//                    return ResponseEntity.ok(donator);
+//                } else {
+//                    throw new UserPermissionException();
+//                }
+//            } else {
+//                throw new DonatorRequirementsException();
+//            }
+//        } catch (UserPermissionException | DonatorRequirementsException exception) {
+//            return ResponseEntity.ok(exception.getMessage());
+//        }
+//    }
+
+    public Donator createDonator(Long userId, Donator donator) throws
+            UserPermissionException,
+            DonatorRequirementsException {
+        if (checkDonatorRequirements(donator)) {
+            if (checkUserPermission(userId, permission)) {
+                donatorRepository.save(donator);
+                return donator;
             } else {
-                throw new DonatorRequirementsException();
+                throw new UserPermissionException("User does not have permission to create a donator.");
             }
-        } catch (UserPermissionException | DonatorRequirementsException exception) {
-            return ResponseEntity.ok(exception.getMessage());
+        } else {
+            throw new DonatorRequirementsException("Donator does not meet the requirements.");
         }
     }
+
 
 //    public Donator deleteDonatorById(Long userId, Long donatorId) throws EntityNotFoundException {
 //        if (donatorId == null) {
@@ -116,26 +140,45 @@ public class DonatorService {
 //        }
 //    }
 
-    public ResponseEntity<?> deleteDonatorById(Long userId, Long donatorId) {
-        try {
-            if (donatorId == null) {
-                throw new DonatorIdException();
-            }
-            Optional<Donator> donator = donatorRepository.findById(donatorId);
-            if (donator.isPresent()) {
-                if (checkUserPermission(userId, permission)) {
-                    donatorRepository.deleteById(donatorId);
-                    return ResponseEntity.ok(donator);
-                } else {
-                    throw new UserPermissionException();
-                }
-            } else {
-                throw new DonatorNotFoundException();
-            }
-        } catch (DonatorIdException
-                 | UserPermissionException
-                 | DonatorNotFoundException exception) {
-            return ResponseEntity.ok(exception.getMessage());
+//    public ResponseEntity<?> deleteDonatorById(Long userId, Long donatorId) {
+//        try {
+//            if (donatorId == null) {
+//                throw new DonatorIdException();
+//            }
+//            Optional<Donator> donator = donatorRepository.findById(donatorId);
+//            if (donator.isPresent()) {
+//                if (checkUserPermission(userId, permission)) {
+//                    donatorRepository.deleteById(donatorId);
+//                    return ResponseEntity.ok(donator);
+//                } else {
+//                    throw new UserPermissionException();
+//                }
+//            } else {
+//                throw new DonatorNotFoundException();
+//            }
+//        } catch (DonatorIdException
+//                 | UserPermissionException
+//                 | DonatorNotFoundException exception) {
+//            return ResponseEntity.ok(exception.getMessage());
+//        }
+//    }
+
+    public Donator deleteDonatorById(Long userId, Long donatorId) throws
+            DonatorIdException,
+            DonatorNotFoundException,
+            UserPermissionException {
+        if (donatorId == null) {
+            throw new DonatorIdException();
+        }
+
+        Donator donator = donatorRepository.findById(donatorId)
+                .orElseThrow(DonatorNotFoundException::new);
+
+        if (checkUserPermission(userId, permission)) {
+            donatorRepository.deleteById(donatorId);
+            return donator;
+        } else {
+            throw new UserPermissionException();
         }
     }
 
@@ -169,43 +212,80 @@ public class DonatorService {
 //        }
 //    }
 
-    public ResponseEntity<?> updateDonator(Long userId, Long donatorId, Donator updatedDonator) {
-        try {
-            if (donatorId == null) {
-                throw new DonatorIdException();
-            }
-            if (checkDonatorRequirements(updatedDonator)) {
-                if (checkUserPermission(userId, permission)) {
-                    Optional<Donator> donator = donatorRepository.findById(donatorId);
-                    if (donator.isPresent()) {
-                        if (updatedDonator.getAdditionalName() != null) {
-                            donator.get().setAdditionalName(updatedDonator.getAdditionalName());
-                        }
-                        if (updatedDonator.getFirstName() != null) {
-                            donator.get().setFirstName(updatedDonator.getFirstName());
-                        }
-                        if (updatedDonator.getLastName() != null) {
-                            donator.get().setLastName(updatedDonator.getLastName());
-                        }
-                        if (updatedDonator.getMaidenName() != null) {
-                            donator.get().setMaidenName(updatedDonator.getMaidenName());
-                        }
-                        donatorRepository.save(donator.get());
-                        return ResponseEntity.ok(donator);
-                    } else {
-                        throw new DonatorNotFoundException();
-                    }
-                } else {
-                    throw new UserPermissionException();
-                }
-            } else {
-                throw new DonatorRequirementsException();
-            }
-        } catch (DonatorIdException
-                 | DonatorNotFoundException
-                 | UserPermissionException
-                 | DonatorRequirementsException exception) {
-            return ResponseEntity.ok(exception.getMessage());
+
+    public Donator updateDonator(Long userId, Long donatorId, Donator updatedDonator) throws
+            DonatorIdException,
+            UserPermissionException,
+            DonatorRequirementsException,
+            DonatorNotFoundException {
+        if (donatorId == null) {
+            throw new DonatorIdException();
         }
+
+        if (!checkUserPermission(userId, permission)) {
+            throw new UserPermissionException();
+        }
+
+        if (!checkDonatorRequirements(updatedDonator)) {
+            throw new DonatorRequirementsException();
+        }
+
+        Donator donator = donatorRepository.findById(donatorId)
+                .orElseThrow(DonatorNotFoundException::new);
+
+        if (updatedDonator.getAdditionalName() != null) {
+            donator.setAdditionalName(updatedDonator.getAdditionalName());
+        }
+        if (updatedDonator.getFirstName() != null) {
+            donator.setFirstName(updatedDonator.getFirstName());
+        }
+        if (updatedDonator.getLastName() != null) {
+            donator.setLastName(updatedDonator.getLastName());
+        }
+        if (updatedDonator.getMaidenName() != null) {
+            donator.setMaidenName(updatedDonator.getMaidenName());
+        }
+        donatorRepository.save(donator);
+        return donator;
     }
+
+//    public ResponseEntity<?> updateDonator(Long userId, Long donatorId, Donator updatedDonator) {
+//        try {
+//            if (donatorId == null) {
+//                throw new DonatorIdException();
+//            }
+//            if (checkDonatorRequirements(updatedDonator)) {
+//                if (checkUserPermission(userId, permission)) {
+//                    Optional<Donator> donator = donatorRepository.findById(donatorId);
+//                    if (donator.isPresent()) {
+//                        if (updatedDonator.getAdditionalName() != null) {
+//                            donator.get().setAdditionalName(updatedDonator.getAdditionalName());
+//                        }
+//                        if (updatedDonator.getFirstName() != null) {
+//                            donator.get().setFirstName(updatedDonator.getFirstName());
+//                        }
+//                        if (updatedDonator.getLastName() != null) {
+//                            donator.get().setLastName(updatedDonator.getLastName());
+//                        }
+//                        if (updatedDonator.getMaidenName() != null) {
+//                            donator.get().setMaidenName(updatedDonator.getMaidenName());
+//                        }
+//                        donatorRepository.save(donator.get());
+//                        return ResponseEntity.ok(donator);
+//                    } else {
+//                        throw new DonatorNotFoundException();
+//                    }
+//                } else {
+//                    throw new UserPermissionException();
+//                }
+//            } else {
+//                throw new DonatorRequirementsException();
+//            }
+//        } catch (DonatorIdException
+//                 | DonatorNotFoundException
+//                 | UserPermissionException
+//                 | DonatorRequirementsException exception) {
+//            return ResponseEntity.ok(exception.getMessage());
+//        }
+//    }
 }
