@@ -198,6 +198,8 @@ public class UserService {
                     user.setRetryCount(0);
                 }
             }
+            if(!newUser.isFirstLogin())
+                user.setFirstLogin(false);
 
             userRepository.save(user);
         }

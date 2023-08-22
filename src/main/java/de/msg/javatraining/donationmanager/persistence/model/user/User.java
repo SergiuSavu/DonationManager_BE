@@ -53,4 +53,5 @@ public class User {
 	public Set<Campaign> getCampaigns() {
 		return campaigns;
 	}
+
 }

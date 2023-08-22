@@ -59,7 +59,7 @@ public class CampaignController {
         {
             Campaign camp = campaignService.deleteCampaignById(userId,campId);
             if(camp!=null){
-                return new ResponseEntity<>("Campaign deleted successfully",HttpStatus.OK);
+                return new ResponseEntity<>(HttpStatus.OK);
             }else{
                 return new ResponseEntity<>("Campaign cant be deleted",HttpStatus.FORBIDDEN);
             }
@@ -77,14 +77,14 @@ public class CampaignController {
         {
             Campaign camp = campaignService.deleteCampaignById(userId,campaign.getId());
             if(camp!=null){
-                return new ResponseEntity<>("Campaign deleted successfully",HttpStatus.OK);
+                return new ResponseEntity<>(HttpStatus.OK); //"Campaign deleted successfully",
             }else{
                 return new ResponseEntity<>("Campaign cant be deleted",HttpStatus.FORBIDDEN);
             }
 
         }
         else
-            return new ResponseEntity<>("Deletion failed: Campaign has paid Donations",HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>("Deletion failed: Campaign has paid Donations",HttpStatus.FORBIDDEN); //
 
 
     }
