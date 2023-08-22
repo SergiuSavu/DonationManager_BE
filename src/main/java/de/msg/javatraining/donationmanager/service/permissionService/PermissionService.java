@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PermissionService {
@@ -29,7 +30,7 @@ public class PermissionService {
     }
 
     public PermissionEnum addPermissionToRole(Long userId, Role role, PermissionEnum permissionToAdd) {
-  
+
         if (permissionToAdd == null) {
             throw new IllegalArgumentException("Permission to add cannot be null.");
         }
@@ -103,8 +104,26 @@ public class PermissionService {
         return false;
     }
 
+    public Optional<Role> findRoleWithPermission(PermissionEnum permission) {
+        return roleRepository.findAll().stream()
+                .filter(role -> role.getPermissions().contains(permission))
+                .findFirst();
+    }
+
     public Set<Role> getRoles(Long userId) {
         Optional<User> optionalUser = userRepository.findById(userId);
         return optionalUser.map(User::getRoles).orElse(null);
     }
+
+
+    public List<User> getUsersWithPermission(PermissionEnum permission) {
+        // Fetch all users
+        List<User> allUsers = userRepository.findAll();
+
+        // Filter users based on the permission and collect them into an ArrayList
+        return allUsers.stream()
+                .filter(user -> hasPermission(user, permission))
+                .collect(Collectors.toList());
+    }
+
 }
