@@ -1,5 +1,6 @@
 package campaignTests;
 
+import de.msg.javatraining.donationmanager.exceptions.user.UserPermissionException;
 import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
 import de.msg.javatraining.donationmanager.persistence.model.ERole;
 import de.msg.javatraining.donationmanager.persistence.model.PermissionEnum;
@@ -17,6 +18,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.OngoingStubbing;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -42,7 +45,7 @@ public class CampaignServiceTest {
     @Mock
     private CampaignRepository campaignRepository;
 
-    private User createUserWithRoleAndPermission1(Long userId,PermissionEnum perm) {
+    private User createUserWithRoleAndPermission1(Long userId, PermissionEnum perm) {
         Set<PermissionEnum> permissionEnums = new HashSet<>();
 
         permissionEnums.add(perm);
@@ -50,136 +53,132 @@ public class CampaignServiceTest {
         Role role = new Role(1, ERole.ROLE_ADM, permissionEnums);
         roles.add(role);
 
-        User user = new User(userId,"testuser", "test", "1234567890", "something", "test@example.com", "psswd", true, false, 1, roles, new HashSet<>());
+        User user = new User(userId, "testuser", "test", "1234567890", "something", "test@example.com", "psswd", true, false, 1, roles, new HashSet<>());
         return user;
     }
-    @Test
-    public void testCreateCampaignWithValidPermissionsAndUniqueName() {
-
-
-        User user = createUserWithRoleAndPermission1(1L,PermissionEnum.CAMP_MANAGEMENT);
-
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
-
-        // Prepare mock campaign repository
-        // Simulating unique name
-        when(campaignRepository.findCampaignByName(anyString())).thenReturn(null);
-
-        Campaign createdCampaign = campaignService.createCampaign(1L, "New Campaign", "Purpose");
-
-        // Verify
-        assertNotNull(createdCampaign);
-        assertEquals("New Campaign", createdCampaign.getName());
-        assertEquals("Purpose", createdCampaign.getPurpose());
-    }
-
 
     @Test
-    public void testCreateCampaignWithNoPermissions() {
-        User user = createUserWithRoleAndPermission1(1L,PermissionEnum.DONATION_APPROVE);
+    public void testCreateCampaign() {
+        Long userId = 1L;
+        String campaignName = "Test Campaign";
+        String campaignPurpose = "Testing purposes";
 
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        // Create a user with the required permission
+        User userWithPermission = createUserWithRoleAndPermission1(userId, PermissionEnum.CAMP_MANAGEMENT);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userWithPermission));
 
+        // Mock the campaignRepository behavior
+        when(campaignRepository.findCampaignByName(campaignName)).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> campaignService.createCampaign(1L, "New Campaign", "Purpose"));
+        ResponseEntity<?> response = campaignService.createCampaign(userId, campaignName, campaignPurpose);
 
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody() instanceof Campaign);
     }
 
     @Test
-    public void testCreateCampaignWithNonUniqueName() {
-        User user = createUserWithRoleAndPermission1(1L,PermissionEnum.CAMP_MANAGEMENT);
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+    public void testCreateCampaignWithNoPermission() {
+        Long userId = 1L;
+        String campaignName = "Test Campaign";
+        String campaignPurpose = "Testing purposes";
 
-        // simulate non-unique name
-        Campaign existingCampaign = new Campaign("New Campaign", "Existing Purpose");
-        when(campaignRepository.findCampaignByName("New Campaign")).thenReturn(existingCampaign);
+        // Create a user without the required permission
+        User userWithoutPermission = createUserWithRoleAndPermission1(userId, PermissionEnum.USER_MANAGEMENT);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userWithoutPermission));
 
+        ResponseEntity<?> response = campaignService.createCampaign(userId, campaignName, campaignPurpose);
 
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody() instanceof String); // Change to the expected response type
 
-        assertThrows(IllegalArgumentException.class,
-                () -> campaignService.createCampaign(1L, "New Campaign", "Purpose"));
-
+        String errorMessage = (String) response.getBody();
+        assertEquals("User does not have the required permission/s!", errorMessage);
     }
 
     @Test
-    public void testCreateCampaignWithUserNotFound() {
-        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+    public void testUpdateCampaign() {
+        Long userId = 1L;
+        Long campaignId = 123L;
+        String newName = "Updated Campaign";
+        String newPurpose = "Updated purposes";
 
+        // Create a user with the required permission
+        User userWithPermission = createUserWithRoleAndPermission1(userId, PermissionEnum.CAMP_MANAGEMENT);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userWithPermission));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> campaignService.createCampaign(1L, "New Campaign", "Purpose"));
+        // Mock the campaignRepository behavior
+        Campaign existingCampaign = new Campaign("Test Campaign", "Testing purposes");
+        when(campaignRepository.findById(campaignId)).thenReturn(Optional.of(existingCampaign));
+        when(campaignRepository.findCampaignByName(newName)).thenReturn(null);
 
-    }
+        ResponseEntity<?> response = campaignService.updateCampaign(userId, campaignId, newName, newPurpose);
 
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody() instanceof Campaign);
 
-    @Test
-    public void testUpdateCampaignWithValidPermissionsAndUniqueName() {
-        User user = createUserWithRoleAndPermission1(1L,PermissionEnum.CAMP_MANAGEMENT);
-
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
-
-        // Simulating unique name
-        when(campaignRepository.findCampaignByName(anyString())).thenReturn(null);
-        Campaign existingCampaign = new Campaign("Existing Campaign", "Existing Purpose");
-        when(campaignRepository.findById(anyLong())).thenReturn(Optional.of(existingCampaign));
-
-        Campaign updatedCampaign = campaignService.updateCampaign(1L, 1L, "New Campaign", "New Purpose");
-
-        assertNotNull(updatedCampaign);
-        assertEquals("New Campaign", updatedCampaign.getName());
-        assertEquals("New Purpose", updatedCampaign.getPurpose());
+        Campaign updatedCampaign = (Campaign) response.getBody();
+        assertEquals(newName, updatedCampaign.getName());
+        assertEquals(newPurpose, updatedCampaign.getPurpose());
     }
 
     @Test
-    public void testUpdateCampaignWithNoPermissions() {
-        User mockUser = new User();
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(mockUser));
+    public void testUpdateCampaignWthNoPermission() {
+        Long userId = 1L;
+        Long campaignId = 123L;
+        String newName = "Updated Campaign";
+        String newPurpose = "Updated purposes";
 
-        assertThrows(IllegalArgumentException.class,
-                () -> campaignService.updateCampaign(1L, 1L, "New Campaign", "New Purpose"));
+        // Create a user without the required permission
+        User userWithoutPermission = createUserWithRoleAndPermission1(userId, PermissionEnum.USER_MANAGEMENT);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userWithoutPermission));
+
+        ResponseEntity<?> response = campaignService.updateCampaign(userId, campaignId, newName, newPurpose);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody() instanceof String);
+
+        String errorMessage = (String) response.getBody();
+        assertEquals("User does not have the required permission/s!", errorMessage);
     }
 
     @Test
-    public void testUpdateCampaignWithNonUniqueName() {
-        User user = createUserWithRoleAndPermission1(1L, PermissionEnum.CAMP_MANAGEMENT);
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+    public void testDeleteCampaignById() {
+        Long userId = 1L;
+        Long campaignId = 123L;
+        String newName = "Test Campaign";
+        String newPurpose = "Testing purposes";
 
-        //simulate non-unique name
-        Campaign existingCampaign = new Campaign("Existing Campaign", "Existing Purpose");
-        when(campaignRepository.findCampaignByName("New Campaign")).thenReturn(null); // Simulating unique name
-        when(campaignRepository.findById(anyLong()))
-                .thenAnswer(invocation -> {
-                    Long idArg = invocation.getArgument(0);
-                    if (idArg.equals(existingCampaign.getId())) {
-                        return Optional.of(existingCampaign);
-                    }
-                    return Optional.empty();
-                });
+        // Create a user with the required permission
+        User userWithPermission = createUserWithRoleAndPermission1(userId, PermissionEnum.CAMP_MANAGEMENT);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userWithPermission));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> campaignService.updateCampaign(1L, 1L, "New Campaign", "New Purpose"));
+        // Mock the campaignRepository behavior
+        Campaign existingCampaign = new Campaign("Test Campaign", "Testing purposes");
+        when(campaignRepository.findById(campaignId)).thenReturn(Optional.of(existingCampaign));
 
+        ResponseEntity<?> response = campaignService.deleteCampaignById(userId, campaignId);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Optional[Campaign(id=null, name="+newName+", purpose="+newPurpose+")]", response.getBody().toString());
     }
 
     @Test
-    public void testUpdateCampaignWithCampaignNotFound() {
-        User user = createUserWithRoleAndPermission1(1L,PermissionEnum.CAMP_MANAGEMENT);
+    public void testDeleteCampaignByIdWithNoPermission(){
+        Long userId = 1L;
+        Long campaignId = 123L;
 
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        // Create a user without the required permission
+        User userWithoutPermission = createUserWithRoleAndPermission1(userId, PermissionEnum.USER_MANAGEMENT);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userWithoutPermission));
 
-        //  not found scenario
-        when(campaignRepository.findById(anyLong())).thenReturn(Optional.empty());
+        ResponseEntity<?> response = campaignService.deleteCampaignById(userId, campaignId);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> campaignService.updateCampaign(1L, 1L, "New Campaign", "New Purpose"));
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody() instanceof String);
+
+        String errorMessage = (String) response.getBody();
+        assertEquals("User does not have the required permission/s!", errorMessage);
     }
 
-    @Test
-    public void testUpdateCampaignWithUserNotFound() {
-        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class,
-                () -> campaignService.updateCampaign(1L, 1L, "New Campaign", "New Purpose"));
-    }
 }
