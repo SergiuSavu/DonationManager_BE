@@ -11,16 +11,21 @@ import de.msg.javatraining.donationmanager.persistence.model.PermissionEnum;
 import de.msg.javatraining.donationmanager.persistence.model.Role;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.exceptions.user.UserPermissionException;
+import de.msg.javatraining.donationmanager.persistence.notificationSystem.NotificationParameter;
+import de.msg.javatraining.donationmanager.persistence.notificationSystem.NotificationType;
 import de.msg.javatraining.donationmanager.persistence.repository.CampaignRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.DonationRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.DonatorRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
+import de.msg.javatraining.donationmanager.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,6 +43,9 @@ public class DonationService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     private final PermissionEnum permission = PermissionEnum.DONATION_MANAGEMENT;
 
@@ -176,6 +184,12 @@ public class DonationService {
                 donation.setCreatedDate(LocalDate.now());
                 donation.setApproved(false);
                 donationRepository.save(donation);
+
+                List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
+                        new NotificationParameter(String.valueOf(donation.getAmount()))
+                ));
+                notificationService.saveNotification(user.get(), parameters, NotificationType.DONATION_APPROVED);
+
                 return ResponseEntity.ok(donation);
             } else {
                 throw new IllegalArgumentException();
