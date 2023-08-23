@@ -65,41 +65,50 @@ public class UserService {
         return userDTOs;
     }
 
-    public void toggleUserActive(Long id) {
-
+    public void toggleUserActive(Long id) throws UserException {
         if (userRepository.findById(id).isEmpty()) {
-            throw new IllegalStateException("User with user id: " + id + " does not exist");
+            throw new UserException("User with user id: " + id + " does not exist", "USER_ID_NOT_PRESENT");
         } else {
             User user = userRepository.findById(id).get();
             user.setActive(!user.isActive());
-            if (user.isActive()) {
+            if(user.isActive()) {
                 resetRetryCount(user.getUsername());
             }
             userRepository.save(user);
         }
     }
 
-    public ResponseEntity<?> createUser(User user) {
-        try {
-            userValidations(user);
+    public void createUser(User user) throws UserException {
+        userValidations(user);
 
-            //Username generation
-            String tempUsername;
-            String lastName = user.getLastName().toLowerCase();
-            String firstName = user.getFirstName().toLowerCase();
-            if (lastName.length() < 5) {
-                tempUsername = lastName + firstName.substring(0, 2);
-            } else {
-                tempUsername = lastName.substring(0, 5).toLowerCase() + firstName.charAt(0);
+        if (user.getMobileNumber() != null) {
+            if (!user.getMobileNumber().matches("^(?:\\+?40|0)?7\\d{8}$")) {
+                throw new UserException("Mobile number is not valid.", "MOBILE_NUMBER_NOT_VALID");
             }
-            int originalLength = tempUsername.length();
+        }
+        if (user.getEmail() != null) {
+            if (!user.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+                throw new UserException("Email is not valid.", "EMAIL_NOT_VALID");
+            }
+        }
 
-            int i = 1;
-            while (userRepository.existsByUsername(tempUsername)) {
-                tempUsername = tempUsername.substring(0, originalLength);
-                tempUsername = tempUsername.concat(String.format("%d", i++));
-            }
-            user.setUsername(tempUsername);
+        //Username generation
+        String tempUsername;
+        String lastName = user.getLastName().toLowerCase();
+        String firstName = user.getFirstName().toLowerCase();
+        if (lastName.length() < 5) {
+            tempUsername = lastName + firstName.substring(0, 2);
+        } else {
+            tempUsername = lastName.substring(0, 5).toLowerCase() + firstName.charAt(0);
+        }
+        int originalLength = tempUsername.length();
+
+        int i = 1;
+        while (userRepository.existsByUsername(tempUsername)) {
+            tempUsername = tempUsername.substring(0, originalLength);
+            tempUsername = tempUsername.concat(String.format("%d", i++));
+        }
+        user.setUsername(tempUsername);
 
 
 //            EmailRequest emailRequest = new EmailRequest();
@@ -115,22 +124,17 @@ public class UserService {
 //        emailService.sendSimpleMessage(emailRequest);
 //            user.setPassword(passwordEncoder.encode(generatedPassword));
 ////        emailService.sendSimpleMessage(emailRequest);
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            userRepository.save(user);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.save(user);
 
-            List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
-                    new NotificationParameter(user.getFirstName()),
-                    new NotificationParameter(user.getLastName()),
-                    new NotificationParameter(user.getMobileNumber()),
-                    new NotificationParameter(user.getEmail()),
-                    new NotificationParameter(user.getUsername())
-            ));
-            notificationService.saveNotification(user, parameters, NotificationType.WELCOME_NEW_USER);
-        } catch (IllegalStateException | IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
-
-        }
-        return new ResponseEntity<>("User created successfully.", HttpStatus.OK);
+        List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
+                new NotificationParameter(user.getFirstName()),
+                new NotificationParameter(user.getLastName()),
+                new NotificationParameter(user.getMobileNumber()),
+                new NotificationParameter(user.getEmail()),
+                new NotificationParameter(user.getUsername())
+        ));
+        notificationService.saveNotification(user, parameters, NotificationType.WELCOME_NEW_USER);
     }
 
     public void resetRetryCount(String username) {
@@ -173,7 +177,7 @@ public class UserService {
 
 
             }
-
+            //TODO: inca mai sunt erori prost tratate
             userRepository.save(user);
         } catch (IllegalStateException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
@@ -183,102 +187,95 @@ public class UserService {
     }
 
 
-    public ResponseEntity<?> updateUser(User userFromToken, Long id, User newUser) {
-        try {
-            if (userRepository.findById(id).isEmpty()) {
-                throw new IllegalStateException("User with id: " + id + " does not exist.");
-            }
-            User user = userRepository.findById(id).get();
-            User oldUser = userRepository.findById(id).get();
-
-            userValidations(newUser);
-
-            if (newUser.getFirstName() != null) {
-                user.setFirstName(newUser.getFirstName());
-            }
-            if (newUser.getLastName() != null) {
-                user.setLastName(newUser.getLastName());
-            }
-            if (newUser.getMobileNumber() != null) {
-                user.setMobileNumber(newUser.getMobileNumber());
-            }
-            if (newUser.getEmail() != null) {
-                user.setEmail(newUser.getEmail());
-            }
-            if (newUser.getPassword() != null) {
-                user.setPassword(passwordEncoder.encode(newUser.getPassword()));
-            }
-            if (!newUser.getRoles().isEmpty()) {
-                user.setRoles(newUser.getRoles());
-            }
-            if (!newUser.getCampaigns().isEmpty()) {
-                user.setCampaigns(newUser.getCampaigns());
-            }
-            if (newUser.isActive() != user.isActive()) {
-                user.setActive(newUser.isActive());
-                if (user.isActive()) {
-                    user.setRetryCount(0);
-                } else {
-                    List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
-                            new NotificationParameter(user.getFirstName()),
-                            new NotificationParameter(user.getLastName()),
-                            new NotificationParameter(user.getMobileNumber()),
-                            new NotificationParameter(user.getEmail()),
-                            new NotificationParameter(user.getUsername())
-                    ));
-
-                    List<User> usersToNotify = permissionService.getUsersWithPermission(PermissionEnum.USER_MANAGEMENT);
-                    notificationService.saveNotification(usersToNotify.get(0), parameters, NotificationType.USER_DEACTIVATED_MANUAL);
-
-                    for (int i = 1; i < usersToNotify.size(); i++) {
-                        User userToNotify = usersToNotify.get(i);
-                        List<NotificationParameter> copiedParameters = deepCopyList(parameters);
-                        notificationService.saveNotification(userToNotify, copiedParameters, NotificationType.USER_DEACTIVATED_MANUAL);
-                    }
-
-                }
-            }
-
-            userRepository.save(user);
-
-            List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
-                    new NotificationParameter(oldUser.getFirstName()),
-                    new NotificationParameter(oldUser.getLastName()),
-                    new NotificationParameter(oldUser.getMobileNumber()),
-                    new NotificationParameter(oldUser.getEmail()),
-                    new NotificationParameter(oldUser.getUsername()),
-                    new NotificationParameter(user.getFirstName()),
-                    new NotificationParameter(user.getLastName()),
-                    new NotificationParameter(user.getMobileNumber()),
-                    new NotificationParameter(user.getEmail()),
-                    new NotificationParameter(user.getUsername())
-            ));
-            List<NotificationParameter> copiedParameters = deepCopyList(parameters);
-
-            notificationService.saveNotification(user, parameters, NotificationType.USER_UPDATED);
-            notificationService.saveNotification(userFromToken, copiedParameters, NotificationType.USER_UPDATED);
-        } catch (IllegalStateException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+    public void updateUser(User userFromToken, Long id, User newUser) throws UserException {
+        if (userRepository.findById(id).isEmpty()) {
+            throw new UserException("User with id: " + id + " does not exist.", "USER_DOES_NOT_EXIST");
         }
-        return new ResponseEntity<>("User successfully updated.", HttpStatus.OK);
+        User user = userRepository.findById(id).get();
+        User oldUser = userRepository.findById(id).get();
+
+        userValidations(newUser);
+
+        if (newUser.getFirstName() != null) {
+            user.setFirstName(newUser.getFirstName());
+        }
+        if (newUser.getLastName() != null) {
+            user.setLastName(newUser.getLastName());
+        }
+        if (newUser.getMobileNumber() != null) {
+            if (!user.getMobileNumber().matches("^(?:\\+?40|0)?7\\d{8}$")) {
+                throw new UserException("Mobile number is not valid.", "MOBILE_NUMBER_NOT_VALID");
+            }
+            user.setMobileNumber(newUser.getMobileNumber());
+        }
+        if (newUser.getEmail() != null) {
+            if (!user.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+                throw new UserException("Email is not valid.", "EMAIL_NOT_VALID");
+            }
+
+            user.setEmail(newUser.getEmail());
+        }
+        if (newUser.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(newUser.getPassword()));
+        }
+        if (!newUser.getRoles().isEmpty()) {
+            user.setRoles(newUser.getRoles());
+        }
+        if (!newUser.getCampaigns().isEmpty()) {
+            user.setCampaigns(newUser.getCampaigns());
+        }
+        if (newUser.isActive() != user.isActive()) {
+            user.setActive(newUser.isActive());
+            if (user.isActive()) {
+                user.setRetryCount(0);
+            } else {
+                List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
+                        new NotificationParameter(user.getFirstName()),
+                        new NotificationParameter(user.getLastName()),
+                        new NotificationParameter(user.getMobileNumber()),
+                        new NotificationParameter(user.getEmail()),
+                        new NotificationParameter(user.getUsername())
+                ));
+
+                List<User> usersToNotify = permissionService.getUsersWithPermission(PermissionEnum.USER_MANAGEMENT);
+                notificationService.saveNotification(usersToNotify.get(0), parameters, NotificationType.USER_DEACTIVATED_MANUAL);
+
+                for (int i = 1; i < usersToNotify.size(); i++) {
+                    User userToNotify = usersToNotify.get(i);
+                    List<NotificationParameter> copiedParameters = deepCopyList(parameters);
+                    notificationService.saveNotification(userToNotify, copiedParameters, NotificationType.USER_DEACTIVATED_MANUAL);
+                }
+
+            }
+        }
+
+        userRepository.save(user);
+        List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
+                new NotificationParameter(oldUser.getFirstName()),
+                new NotificationParameter(oldUser.getLastName()),
+                new NotificationParameter(oldUser.getMobileNumber()),
+                new NotificationParameter(oldUser.getEmail()),
+                new NotificationParameter(oldUser.getUsername()),
+                new NotificationParameter(user.getFirstName()),
+                new NotificationParameter(user.getLastName()),
+                new NotificationParameter(user.getMobileNumber()),
+                new NotificationParameter(user.getEmail()),
+                new NotificationParameter(user.getUsername())
+        ));
+        List<NotificationParameter> copiedParameters = deepCopyList(parameters);
+
+        notificationService.saveNotification(user, parameters, NotificationType.USER_UPDATED);
+        notificationService.saveNotification(userFromToken, copiedParameters, NotificationType.USER_UPDATED);
     }
 
-    private void userValidations(User user) {
+    private void userValidations(User user) throws UserException {
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new IllegalStateException("Email already in use.");
+            throw new UserException("Email already in use.", "EMAIL_IN_USE");
         }
 
         if (userRepository.existsByMobileNumber(user.getMobileNumber())) {
-            throw new IllegalStateException("Mobile number already in use.");
+            throw new UserException("Mobile number already in use.", "MOBILE_NUMBER_IN_USE");
         }
-
-//            if (!user.getMobileNumber().matches("^(?:\\+?40|0)?7\\d{8}$")) {
-//                throw new IllegalArgumentException("Mobile number is not valid.");
-//            }
-//
-//            if (!user.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
-//                throw new IllegalArgumentException("Email is not valid.");
-//            }
     }
 
     public ResponseEntity<?> getUserById(Long id) {
@@ -303,7 +300,7 @@ public class UserService {
             userDTO.setFirstLogin(userFromDB.isFirstLogin());
             userDTO.setRetryCount(userFromDB.getRetryCount());
 
-
+        //TODO: inca mai sunt erori prost tratate
         } catch (IllegalStateException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
         }
