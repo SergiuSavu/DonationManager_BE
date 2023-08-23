@@ -1,11 +1,13 @@
 package de.msg.javatraining.donationmanager.service.permissionService;
 
+import de.msg.javatraining.donationmanager.exceptions.permission.PermissionException;
 import de.msg.javatraining.donationmanager.persistence.model.PermissionEnum;
 import de.msg.javatraining.donationmanager.persistence.model.Role;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.persistence.repository.RoleRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -29,10 +31,10 @@ public class PermissionService {
         return role.get().getPermissions().stream().toList();
     }
 
-    public PermissionEnum addPermissionToRole(Long userId, Role role, PermissionEnum permissionToAdd) {
-
+    public Role addPermissionToRole(Long userId, Integer roleId, PermissionEnum permissionToAdd) throws PermissionException{
+  
         if (permissionToAdd == null) {
-            throw new IllegalArgumentException("Permission to add cannot be null.");
+            throw new PermissionException("Permission to add cannot be null.","Permission_to_add_cannot_be_null.");
         }
 
         Set<PermissionEnum> s = new HashSet<>(); s.add(permissionToAdd);
@@ -42,29 +44,32 @@ public class PermissionService {
         //}
 
         Optional<User> userADMIN = userRepository.findById(userId);
+        Optional<Role> role = roleRepository.findById(roleId);
 
         if (userADMIN.isPresent()) {
             PermissionEnum adminPermissionToCheck = PermissionEnum.PERMISSION_MANAGEMENT;
 
             for (Role adminRole : userADMIN.get().getRoles()) {
                 if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
-                    if (role.getPermissions().contains(permissionToAdd)) {
-                        throw new NullPointerException("Permission already exists.");}
+                    if (role.get().getPermissions().contains(permissionToAdd)) {
+                        throw new PermissionException("Permission already exists.","Permission_already_exists.");}
                     else {
-                        role.getPermissions().add(permissionToAdd);
-                        roleRepository.save(role);
-                        return permissionToAdd;
+                        Set<PermissionEnum> permissions = role.get().getPermissions();
+                        permissions.add(permissionToAdd);
+                        role.get().setPermissions(permissions);
+                        return roleRepository.save(role.get());
+                        //return permissionToAdd;
                     }
                 }
             }
         }
-        throw new IllegalArgumentException("User not found or permission not available.");
+        throw new PermissionException("User not found or permission not available to edit roles.", "User_not_found_or_permission_not_available_to_edit_roles.");
     }
 
 
-    public PermissionEnum deletePermissionFromRole(Long userId, Role role, PermissionEnum permissionToDelete) {
-        if (userId == null || permissionToDelete == null) {
-            throw new IllegalArgumentException("User ID and permission to delete cannot be null.");
+    public Role deletePermissionFromRole(Long userId, Integer roleId, PermissionEnum permissionToDelete) throws PermissionException {
+        if (permissionToDelete == null) {
+            throw new PermissionException("Permission to delete cannot be null.", "Permission_to_delete_cannot_be_null.");
         }
 
         Set<PermissionEnum> pp = new HashSet<>(); pp.add(permissionToDelete);
@@ -74,23 +79,26 @@ public class PermissionService {
         //}
 
         Optional<User> userADMIN = userRepository.findById(userId);
+        Optional<Role> role = roleRepository.findById(roleId);
 
         if (userADMIN.isPresent()) {
             PermissionEnum adminPermissionToCheck = PermissionEnum.PERMISSION_MANAGEMENT;
 
             for (Role adminRole : userADMIN.get().getRoles()) {
                 if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
-                    if (role.getPermissions().contains(permissionToDelete)) {
-                        role.getPermissions().remove(permissionToDelete);
-                        roleRepository.save(role);
-                        return permissionToDelete;
+                    if (role.get().getPermissions().contains(permissionToDelete)) {
+                        Set<PermissionEnum> permissions = role.get().getPermissions();
+                        permissions.remove(permissionToDelete);
+                        role.get().setPermissions(permissions);
+                        return roleRepository.save(role.get());
+                        //return permissionToDelete;
                     } else {
-                        throw new IllegalArgumentException("Permission to delete does not exist.");
+                        throw new PermissionException("Permission to delete does not exist.", "Permission_to_delete_does_not_exist.");
                     }
                 }
             }
         }
-        throw new IllegalArgumentException("User not found or permission not available.");
+        throw new PermissionException("User not found or permission not available to edit roles.", "User_not_found_or_permission_not_available_to_edit_roles.");
     }
 
 
