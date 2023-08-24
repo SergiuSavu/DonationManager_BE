@@ -2,10 +2,11 @@ package de.msg.javatraining.donationmanager.controller.user;
 
 import de.msg.javatraining.donationmanager.controller.dto.UserDTO;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
+import de.msg.javatraining.donationmanager.service.userService.UserException;
 import de.msg.javatraining.donationmanager.service.userService.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.auth0.jwt.JWT;
@@ -21,29 +22,42 @@ public class UserController {
     private UserService userService;
 
     @GetMapping("/all")
-    public List<UserDTO> getAllUsers(){
-       return userService.getAllUsers();
+    public List<UserDTO> getAllUsers() {
+        return userService.getAllUsers();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUserById(@PathVariable("id") Long id){
+    public ResponseEntity<?> getUserById(@PathVariable("id") Long id) {
         return userService.getUserById(id);
     }
 
     @PostMapping("/new")
-    public ResponseEntity<?> createUser(@RequestBody User user){
-        return userService.createUser(user);
+    public ResponseEntity<?> createUser(@RequestBody User user) {
+        ResponseEntity<?> response;
+        try {
+            userService.createUser(user);
+            response = new ResponseEntity<>(user, HttpStatusCode.valueOf(200));
+        } catch (UserException exception) {
+            response = new ResponseEntity<>(exception, HttpStatusCode.valueOf(200));
+        }
+        return response;
     }
 
     @PutMapping("/toggle/{id}")
-//    @PreAuthorize("hasRole('ADMIN')")
-    public void toggleUserActive(@PathVariable("id") Long id) {
-        userService.toggleUserActive(id);
+    public ResponseEntity<?> toggleUserActive(@PathVariable("id") Long id) {
+        ResponseEntity<?> response;
+        try {
+            userService.toggleUserActive(id);
+            response = new ResponseEntity<>(id, HttpStatusCode.valueOf(200));
+        } catch (UserException exception) {
+            response = new ResponseEntity<>(exception, HttpStatusCode.valueOf(200));
+        }
+        return response;
     }
 
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable("id") Long id, @RequestBody User newUser, HttpServletRequest request){
+    public ResponseEntity<?> updateUser(@PathVariable("id") Long id, @RequestBody User newUser, HttpServletRequest request) {
         // Extract the token from the header
         String token = request.getHeader("Authorization"); // Assuming the header is "Bearer <token>"
         System.out.println("token: " + token);
@@ -58,12 +72,13 @@ public class UserController {
         // Fetch the user by username
         User userFromToken = userService.findByUsername(usernameFromToken);
 
-        if(userFromToken == null)
-            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
-
-        return userService.updateUser(userFromToken, id, newUser);
+        ResponseEntity<?> response;
+        try {
+            userService.updateUser(userFromToken, id, newUser);
+            response = new ResponseEntity<>(newUser, HttpStatusCode.valueOf(200));
+        } catch (UserException exception) {
+            response = new ResponseEntity<>(exception, HttpStatusCode.valueOf(200));
+        }
+        return response;
     }
-
-    //   getRoles, addRoles, deleteRoles with @PutMapping("/roles")... "/roles/{id}",
-    //   "roles/add/{id}", "roles/delete/{id}")
 }
