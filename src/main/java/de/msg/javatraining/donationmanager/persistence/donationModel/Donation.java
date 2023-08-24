@@ -1,7 +1,7 @@
 package de.msg.javatraining.donationmanager.persistence.donationModel;
 
 import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
-import de.msg.javatraining.donationmanager.persistence.donatorModel.Donator;
+import de.msg.javatraining.donationmanager.persistence.donorModel.Donor;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -31,16 +31,16 @@ public class Donation {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "donator")
-    private Donator donator; // who donated, donatorId
+    private Donor donor; // who donated, donatorId
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "createdBy")
     private User createdBy; // user which created the donation, createdById
 
-    private Date approveDate;
+    private LocalDate approveDate;
     private String notes;
     private LocalDate createdDate;
-    private boolean approved;
+    private boolean approved;// = false;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "approvedBy")

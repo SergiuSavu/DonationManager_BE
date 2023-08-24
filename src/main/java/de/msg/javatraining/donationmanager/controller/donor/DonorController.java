@@ -1,14 +1,13 @@
-package de.msg.javatraining.donationmanager.controller.donator;
+package de.msg.javatraining.donationmanager.controller.donor;
 
 import de.msg.javatraining.donationmanager.exceptions.donator.DonatorIdException;
 import de.msg.javatraining.donationmanager.exceptions.donator.DonatorNotFoundException;
 import de.msg.javatraining.donationmanager.exceptions.donator.DonatorRequirementsException;
 import de.msg.javatraining.donationmanager.exceptions.user.UserPermissionException;
-import de.msg.javatraining.donationmanager.persistence.donatorModel.Donator;
+import de.msg.javatraining.donationmanager.persistence.donorModel.Donor;
 import de.msg.javatraining.donationmanager.service.donationService.DonationService;
-import de.msg.javatraining.donationmanager.service.donatorService.DonatorService;
+import de.msg.javatraining.donationmanager.service.donorService.DonorService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,23 +15,23 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/donator")
-public class DonatorController {
+public class DonorController {
     @Autowired
-    private DonatorService donatorService;
+    private DonorService donorService;
 
     @Autowired
     private DonationService donationService;
 
     @GetMapping()
-    public List<Donator> getAllDonators() {
-        return donatorService.getAllDonators();
+    public List<Donor> getAllDonators() {
+        return donorService.getAllDonators();
     }
 
     @GetMapping("/{donatorId}")
     public ResponseEntity<?> getDonator(@PathVariable("donatorId") Long donatorId) {
         try {
-            Donator donator = donatorService.getDonatorById(donatorId);
-            return ResponseEntity.ok(donator);
+            Donor donor = donorService.getDonatorById(donatorId);
+            return ResponseEntity.ok(donor);
         } catch (DonatorNotFoundException exception) {
             return ResponseEntity.ok(exception.getMessage());
         }
@@ -50,9 +49,9 @@ public class DonatorController {
 //    }
 
     @PostMapping("/{userId}")
-    public ResponseEntity<?> createDonator(@PathVariable("userId") Long userId, @RequestBody Donator donator) {
+    public ResponseEntity<?> createDonator(@PathVariable("userId") Long userId, @RequestBody Donor donor) {
         try {
-            Donator don = donatorService.createDonator(userId, donator);
+            Donor don = donorService.createDonator(userId, donor);
             if (don != null) {
                 return ResponseEntity.ok("Donator created successfully!");
             }
@@ -75,9 +74,9 @@ public class DonatorController {
     @PutMapping("/{donatorId}/{userId}")
     public ResponseEntity<?> updateDonator(@PathVariable("userId") Long userId,
                                            @PathVariable("donatorId") Long donatorId,
-                                           @RequestBody Donator newDonator) {
+                                           @RequestBody Donor newDonor) {
         try {
-            Donator don = donatorService.updateDonator(userId, donatorId, newDonator);
+            Donor don = donorService.updateDonator(userId, donatorId, newDonor);
             if (don != null) {
                 return ResponseEntity.ok("Donator updated successfully!");
             } else {
@@ -110,14 +109,14 @@ public class DonatorController {
     @DeleteMapping("/{donatorId}/{userId}")
     public ResponseEntity<?> deleteDonatorById(@PathVariable("userId") Long userId, @PathVariable("donatorId") Long donatorId) {
         try {
-            Donator don = donatorService.deleteDonatorById(userId, donatorId);
+            Donor don = donorService.deleteDonatorById(userId, donatorId);
             if (don != null) {
                 if (donationService.findDonationsByDonatorId(donatorId)) {
-                    Donator updateValues = new Donator("UNKNOWN", "UNKNOWN", "UNKNOWN","UNKNOWN");
-                    donatorService.updateDonator(userId, donatorId, updateValues);
+                    Donor updateValues = new Donor("UNKNOWN", "UNKNOWN", "UNKNOWN","UNKNOWN");
+                    donorService.updateDonator(userId, donatorId, updateValues);
                     return ResponseEntity.ok("Donator values have been set to UNKNOWN!");
                 } else {
-                    donatorService.deleteDonatorById(userId, donatorId);
+                    donorService.deleteDonatorById(userId, donatorId);
                     return ResponseEntity.ok("Donator values have been deleted!");
                 }
             }

@@ -1,6 +1,6 @@
-package de.msg.javatraining.donationmanager.service.donatorService;
+package de.msg.javatraining.donationmanager.service.donorService;
 
-import de.msg.javatraining.donationmanager.persistence.donatorModel.Donator;
+import de.msg.javatraining.donationmanager.persistence.donorModel.Donor;
 import de.msg.javatraining.donationmanager.exceptions.donator.DonatorIdException;
 import de.msg.javatraining.donationmanager.exceptions.donator.DonatorNotFoundException;
 import de.msg.javatraining.donationmanager.exceptions.donator.DonatorRequirementsException;
@@ -8,28 +8,26 @@ import de.msg.javatraining.donationmanager.persistence.model.PermissionEnum;
 import de.msg.javatraining.donationmanager.persistence.model.Role;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.exceptions.user.UserPermissionException;
-import de.msg.javatraining.donationmanager.persistence.repository.DonatorRepository;
+import de.msg.javatraining.donationmanager.persistence.repository.DonorRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-public class DonatorService {
+public class DonorService {
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private DonatorRepository donatorRepository;
+    private DonorRepository donorRepository;
 
     private final PermissionEnum permission = PermissionEnum.BENEF_MANAGEMENT;
 
-    private boolean checkDonatorRequirements(Donator donator) {
-        return donator.getFirstName() != null && donator.getLastName() != null;
+    private boolean checkDonatorRequirements(Donor donor) {
+        return donor.getFirstName() != null && donor.getLastName() != null;
     }
 
     private boolean checkUserPermission(Long userId, PermissionEnum requiredPermission) {
@@ -48,8 +46,8 @@ public class DonatorService {
     }
 
 
-    public List<Donator> getAllDonators() {
-        return donatorRepository.findAll();
+    public List<Donor> getAllDonators() {
+        return donorRepository.findAll();
     }
 
 //    public Optional<Donator> getDonatorById(Long id) {
@@ -72,10 +70,10 @@ public class DonatorService {
 //        return ResponseEntity.ok(donator);
 //    }
 
-    public Donator getDonatorById(Long id) throws DonatorNotFoundException {
-        Donator donator = donatorRepository.findById(id)
+    public Donor getDonatorById(Long id) throws DonatorNotFoundException {
+        Donor donor = donorRepository.findById(id)
                 .orElseThrow(DonatorNotFoundException::new);
-        return donator;
+        return donor;
     }
 
 
@@ -109,13 +107,13 @@ public class DonatorService {
 //        }
 //    }
 
-    public Donator createDonator(Long userId, Donator donator) throws
+    public Donor createDonator(Long userId, Donor donor) throws
             UserPermissionException,
             DonatorRequirementsException {
-        if (checkDonatorRequirements(donator)) {
+        if (checkDonatorRequirements(donor)) {
             if (checkUserPermission(userId, permission)) {
-                donatorRepository.save(donator);
-                return donator;
+                donorRepository.save(donor);
+                return donor;
             } else {
                 throw new UserPermissionException("User does not have permission to create a donator.");
             }
@@ -163,7 +161,7 @@ public class DonatorService {
 //        }
 //    }
 
-    public Donator deleteDonatorById(Long userId, Long donatorId) throws
+    public Donor deleteDonatorById(Long userId, Long donatorId) throws
             DonatorIdException,
             DonatorNotFoundException,
             UserPermissionException {
@@ -171,12 +169,12 @@ public class DonatorService {
             throw new DonatorIdException();
         }
 
-        Donator donator = donatorRepository.findById(donatorId)
+        Donor donor = donorRepository.findById(donatorId)
                 .orElseThrow(DonatorNotFoundException::new);
 
         if (checkUserPermission(userId, permission)) {
-            donatorRepository.deleteById(donatorId);
-            return donator;
+            donorRepository.deleteById(donatorId);
+            return donor;
         } else {
             throw new UserPermissionException();
         }
@@ -213,7 +211,7 @@ public class DonatorService {
 //    }
 
 
-    public Donator updateDonator(Long userId, Long donatorId, Donator updatedDonator) throws
+    public Donor updateDonator(Long userId, Long donatorId, Donor updatedDonor) throws
             DonatorIdException,
             UserPermissionException,
             DonatorRequirementsException,
@@ -226,27 +224,27 @@ public class DonatorService {
             throw new UserPermissionException();
         }
 
-        if (!checkDonatorRequirements(updatedDonator)) {
+        if (!checkDonatorRequirements(updatedDonor)) {
             throw new DonatorRequirementsException();
         }
 
-        Donator donator = donatorRepository.findById(donatorId)
+        Donor donor = donorRepository.findById(donatorId)
                 .orElseThrow(DonatorNotFoundException::new);
 
-        if (updatedDonator.getAdditionalName() != null) {
-            donator.setAdditionalName(updatedDonator.getAdditionalName());
+        if (updatedDonor.getAdditionalName() != null) {
+            donor.setAdditionalName(updatedDonor.getAdditionalName());
         }
-        if (updatedDonator.getFirstName() != null) {
-            donator.setFirstName(updatedDonator.getFirstName());
+        if (updatedDonor.getFirstName() != null) {
+            donor.setFirstName(updatedDonor.getFirstName());
         }
-        if (updatedDonator.getLastName() != null) {
-            donator.setLastName(updatedDonator.getLastName());
+        if (updatedDonor.getLastName() != null) {
+            donor.setLastName(updatedDonor.getLastName());
         }
-        if (updatedDonator.getMaidenName() != null) {
-            donator.setMaidenName(updatedDonator.getMaidenName());
+        if (updatedDonor.getMaidenName() != null) {
+            donor.setMaidenName(updatedDonor.getMaidenName());
         }
-        donatorRepository.save(donator);
-        return donator;
+        donorRepository.save(donor);
+        return donor;
     }
 
 //    public ResponseEntity<?> updateDonator(Long userId, Long donatorId, Donator updatedDonator) {
