@@ -31,6 +31,19 @@ public class PermissionService {
         return role.get().getPermissions().stream().toList();
     }
 
+
+    /**
+     * Returns the modified new Role from the database, which now has also the new permission in the permission list
+     * of the role
+     * @author Gal Timea
+     * @param userId id of the user who is logged in
+     * @param roleId id of the role
+     * @param permissionToAdd new permission to add that role, specified with the roleId
+     * @return new modified Role which now has the new permission
+     * @throws PermissionException depending on the case: the new permission is null,
+     * the user does not have the specific permission to edit roles or the permission already exists in the permission
+     * list of that role, specified with roleId
+     */
     public Role addPermissionToRole(Long userId, Integer roleId, PermissionEnum permissionToAdd) throws PermissionException{
   
         if (permissionToAdd == null) {
@@ -67,6 +80,18 @@ public class PermissionService {
     }
 
 
+    /**
+     * Returns the modified new Role from the database, which now does not have the deleted permission in the permission list
+     * of the role
+     * @author Gal Timea
+     * @param userId id of the user who is logged in
+     * @param roleId id of the role
+     * @param permissionToAdd new permission to delete from that role, specified with the roleId
+     * @return new modified Role which now does not have the permission
+     * @throws PermissionException depending on the case: the new permission is null,
+     * the user does not have the specific permission to edit roles or the permission is not available in the permission
+     * list of that role, specified with roleId (not available - maybe already deleted)
+     */
     public Role deletePermissionFromRole(Long userId, Integer roleId, PermissionEnum permissionToDelete) throws PermissionException {
         if (permissionToDelete == null) {
             throw new PermissionException("Permission to delete cannot be null.", "Permission_to_delete_cannot_be_null.");
@@ -102,7 +127,13 @@ public class PermissionService {
     }
 
 
-
+    /**
+     * If the user has the permission in one of his roles returns true, else false
+     * @author Gal Timea
+     * @param user is a User object
+     * @param permission is an enum which should be in the list of a role
+     * @return true or false, depending on the fact that the user has that permission or not
+     */
     public boolean hasPermission(User user, PermissionEnum permission) {
         for (Role role : user.getRoles()) {
             if (role.getPermissions().contains(permission)) {
@@ -112,18 +143,33 @@ public class PermissionService {
         return false;
     }
 
+    /**
+     * @author Tincu Ioana
+     * @param permission
+     * @return
+     */
     public Optional<Role> findRoleWithPermission(PermissionEnum permission) {
         return roleRepository.findAll().stream()
                 .filter(role -> role.getPermissions().contains(permission))
                 .findFirst();
     }
 
+    /**
+     * @author Gal Timea
+     * @param userId id of a User
+     * @return a set of roles of a specific user
+     */
     public Set<Role> getRoles(Long userId) {
         Optional<User> optionalUser = userRepository.findById(userId);
         return optionalUser.map(User::getRoles).orElse(null);
     }
 
 
+    /**
+     * @author Tincu Ioana
+     * @param permission
+     * @return
+     */
     public List<User> getUsersWithPermission(PermissionEnum permission) {
         // Fetch all users
         List<User> allUsers = userRepository.findAll();

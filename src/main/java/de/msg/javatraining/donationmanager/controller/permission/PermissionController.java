@@ -31,6 +31,13 @@ public class PermissionController {
         return permissionService.getAllPermissions(roleId);
     }
 
+    /**
+     * @author Gal Timea
+     * @param userId is the id of a user who wants to add a new permission
+     * @param roleId is the id of a role which will be modified by adding a new permission to that role
+     * @param permission is the new permission to add
+     * @return the new modified role
+     */
     @PostMapping("/{roleId}/{userId}/add")
     public ResponseEntity<?> addPermissionToRole(@PathVariable("userId") Long userId, @PathVariable("roleId") Integer roleId, @RequestBody PermissionEnum permission) {
         ResponseEntity<?> response;
@@ -44,6 +51,13 @@ public class PermissionController {
         return response;
     }
 
+    /**
+     * @author Gal Timea
+     * @param userId is the id of a user who wants to delete a permission from a role
+     * @param roleId is the id of a role which will be modified by deleting a permission from that role
+     * @param permission is the permission to delete
+     * @return the new modified role
+     */
     @DeleteMapping("/{roleId}/{userId}/delete")
     public ResponseEntity<?> deletePermissionFromRole(@PathVariable("userId") Long userId, @PathVariable("roleId") Integer roleId, @RequestBody PermissionEnum permission) throws PermissionException {
         ResponseEntity<?> response;
