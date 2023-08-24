@@ -92,7 +92,7 @@ public class AuthController {
     HttpHeaders headers = new HttpHeaders();
     headers.add(HttpHeaders.SET_COOKIE, createCookie(refreshToken).toString());
     SignInResponse signInResponse = new SignInResponse(jwt, refreshToken, userDetails.getId(),
-            userDetails.getUsername(), userDetails.getEmail(), roles);
+            userDetails.getUsername(), userDetails.getEmail(),userDetails.isFirstLogin(), roles);
 
     userService.resetRetryCount(loginRequest.getUsername());
     return new ResponseEntity<>(signInResponse, headers, HttpStatus.OK);

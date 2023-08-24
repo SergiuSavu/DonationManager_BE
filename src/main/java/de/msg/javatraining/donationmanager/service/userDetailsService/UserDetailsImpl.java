@@ -27,20 +27,25 @@ public class UserDetailsImpl implements UserDetails {
 	private String password;
 
 	private boolean active;
+	private boolean firstLogin;
 
 	private Collection<? extends GrantedAuthority> authorities;
 
 	public UserDetailsImpl(Long id, String username, String email, String password,
-			boolean  active, Collection<? extends GrantedAuthority> authorities) {
+			boolean  active, boolean firstLogin,Collection<? extends GrantedAuthority> authorities) {
 		this.id = id;
 		this.username = username;
 		this.email = email;
 		this.password = password;
 		this.active = active;
 		this.authorities = authorities;
+		this.firstLogin=firstLogin;
 	}
 
 	public static UserDetailsImpl build(User user) {
+//		List<GrantedAuthority> authorities = user.getRoles().stream()
+//				.map(role -> new SimpleGrantedAuthority(role.getPermissions().toString()))
+//				.collect(Collectors.toList());
 		List<GrantedAuthority> authorities = user.getRoles().stream()
 				.flatMap(role -> role.getPermissions().stream()
 						.map(permission -> new SimpleGrantedAuthority(permission.toString()))
@@ -53,6 +58,7 @@ public class UserDetailsImpl implements UserDetails {
 				user.getEmail(),
 				user.getPassword(),
 				user.isActive(),
+				user.isFirstLogin(),
 				authorities);
 	}
 
@@ -99,7 +105,13 @@ public class UserDetailsImpl implements UserDetails {
 		return active;
 	}
 
+	public boolean isFirstLogin() {
+		return firstLogin;
+	}
 
+	public void setFirstLogin(boolean firstLogin) {
+		this.firstLogin = firstLogin;
+	}
 
 	@Override
 	public boolean equals(Object o) {

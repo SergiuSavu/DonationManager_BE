@@ -5,6 +5,7 @@ import de.msg.javatraining.donationmanager.exceptions.donator.DonatorRequirement
 import de.msg.javatraining.donationmanager.exceptions.user.UserNotFoundException;
 import de.msg.javatraining.donationmanager.exceptions.user.UserPermissionException;
 import de.msg.javatraining.donationmanager.persistence.donationModel.Donation;
+import de.msg.javatraining.donationmanager.exceptions.donation.DonationNotFoundException;
 import de.msg.javatraining.donationmanager.service.donationService.DonationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

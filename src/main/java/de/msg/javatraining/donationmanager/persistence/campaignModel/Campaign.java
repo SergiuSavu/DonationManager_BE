@@ -1,11 +1,15 @@
 package de.msg.javatraining.donationmanager.persistence.campaignModel;
 
 
+import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Entity
@@ -25,6 +29,9 @@ public class Campaign {
     private Long id;
     private String name;
     private String purpose;
+
+//    @ManyToMany(mappedBy = "campaigns")
+//    private Set<User> users = new HashSet<>();
 
 
     public Campaign(String name, String purpose) {

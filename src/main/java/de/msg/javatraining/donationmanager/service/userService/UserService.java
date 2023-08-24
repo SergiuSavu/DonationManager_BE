@@ -224,6 +224,9 @@ public class UserService {
         if (!newUser.getCampaigns().isEmpty()) {
             user.setCampaigns(newUser.getCampaigns());
         }
+        if(!newUser.isFirstLogin())
+            user.setFirstLogin(false);
+
         if (newUser.isActive() != user.isActive()) {
             user.setActive(newUser.isActive());
             if (user.isActive()) {
