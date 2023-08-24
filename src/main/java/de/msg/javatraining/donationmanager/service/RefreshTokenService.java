@@ -43,7 +43,7 @@ public class RefreshTokenService {
 
     public String exchangeRefreshToken(String refreshToken) {
         Optional<RefreshToken> refreshTokenOptional = refreshTokenRepository.findById(refreshToken);
-        if(!refreshTokenOptional.isPresent()) {
+        if(refreshTokenOptional.isEmpty()) {
             throw new RuntimeException("Refresh token is not valid");
         }
         RefreshToken rt = refreshTokenOptional.get();
@@ -51,6 +51,6 @@ public class RefreshTokenService {
             refreshTokenRepository.delete(rt);
             throw new RuntimeException("Refresh token is expired");
         }
-        return jwtUtils.generateJwtToken(userDetailsService.loadUserByUsername(rt.getUser().getUsername()));
+        return jwtUtils.generateJwtToken(userDetailsService.loadUserByUsername(rt.getUser().getUsername()), userRepository.getByUsername(rt.getUser().getUsername()));
     }
 }

@@ -2,6 +2,7 @@ package de.msg.javatraining.donationmanager.controller.auth;
 
 
 import de.msg.javatraining.donationmanager.config.security.JwtUtils;
+import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.persistence.repository.RoleRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
 import de.msg.javatraining.donationmanager.service.RefreshTokenService;
@@ -70,7 +71,6 @@ public class AuthController {
     }
     catch (AuthenticationException e) {
       if (userService.existsByUsername(loginRequest.getUsername())){
-        ResponseEntity<?> retry = userService.updateRetryCount(loginRequest.getUsername());
         return new ResponseEntity<>("Password is wrong.", HttpStatus.FORBIDDEN);
       }
       return new ResponseEntity<>("Username is wrong.", HttpStatus.FORBIDDEN);
@@ -80,7 +80,10 @@ public class AuthController {
 
     UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-    String jwt = jwtUtils.generateJwtToken(userDetails);
+    User user = userRepository.getByUsername(userDetails.getUsername());
+
+    String jwt = jwtUtils.generateJwtToken(userDetails, user);
+    System.out.println(jwt);
 
     List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority)
         .collect(Collectors.toList());

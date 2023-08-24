@@ -110,6 +110,7 @@ public class UserService {
         }
         user.setUsername(tempUsername);
 
+        //TODO: De decomentat pentru demo
 
 //            EmailRequest emailRequest = new EmailRequest();
 //            emailRequest.setDestination(user.getEmail());
