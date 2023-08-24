@@ -5,7 +5,9 @@ import de.msg.javatraining.donationmanager.exceptions.campaign.CampaignIdExcepti
 import de.msg.javatraining.donationmanager.exceptions.campaign.CampaignNameException;
 import de.msg.javatraining.donationmanager.exceptions.campaign.CampaignNotFoundException;
 import de.msg.javatraining.donationmanager.exceptions.campaign.CampaignRequirementsException;
+import de.msg.javatraining.donationmanager.exceptions.donation.DonationNotFoundException;
 import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
+import de.msg.javatraining.donationmanager.persistence.donationModel.Donation;
 import de.msg.javatraining.donationmanager.persistence.model.PermissionEnum;
 import de.msg.javatraining.donationmanager.persistence.model.Role;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
@@ -32,49 +34,63 @@ public class CampaignService {
     private CampaignRepository campaignRepository;
 
 
+    private final PermissionEnum permission = PermissionEnum.CAMP_MANAGEMENT;
+
+    private boolean checkUserPermission(Long userId, PermissionEnum requiredPermission) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            for (Role role : user.getRoles()) {
+                if (role.getPermissions().contains(requiredPermission)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public List<Campaign> getAllCampaigns(){
         return campaignRepository.findAll() ;
     }
 
-    public ResponseEntity<?> createCampaign(Long userId, String name, String purpose) {
-        try {
-            if (name == null || purpose == null) {
-                throw new CampaignRequirementsException();
+    public Campaign createCampaign(Long userId, String name, String purpose) throws
+            CampaignRequirementsException,
+            CampaignNameException,
+            UserPermissionException,
+            UserNotFoundException {
+
+        if (name == null || purpose == null) {
+            throw new CampaignRequirementsException();
+        }
+
+        Optional<User> userADMIN = userRepository.findById(userId);
+
+        if (userADMIN.isPresent()) {
+            PermissionEnum adminPermissionToCheck = PermissionEnum.CAMP_MANAGEMENT;
+            boolean hasAdminPermission = false;
+
+            for (Role adminRole : userADMIN.get().getRoles()) {
+                if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
+                    hasAdminPermission = true;
+                    break;
+                }
             }
 
-            Optional<User> userADMIN = userRepository.findById(userId);
-
-            if (userADMIN.isPresent()) {
-                PermissionEnum adminPermissionToCheck = PermissionEnum.CAMP_MANAGEMENT;
-                boolean hasAdminPermission = false;
-
-                for (Role adminRole : userADMIN.get().getRoles()) {
-                    if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
-                        hasAdminPermission = true;
-                        break;
-                    }
-                }
-
-                if (hasAdminPermission) {
-                    if (campaignRepository.findCampaignByName(name) != null) {
-                        throw new CampaignNameException();
-                    } else {
-                        Campaign campaign = new Campaign(name, purpose);
-                        campaignRepository.save(campaign);
-                        return ResponseEntity.ok(campaign);
-                    }
+            if (hasAdminPermission) {
+                if (campaignRepository.findCampaignByName(name) != null) {
+                    throw new CampaignNameException();
                 } else {
-                    throw new UserPermissionException();
+                    Campaign campaign = new Campaign(name, purpose);
+                    campaignRepository.save(campaign);
+                    return campaign;
                 }
             } else {
-                throw new UserNotFoundException();
+                throw new UserPermissionException();
             }
-        } catch (CampaignRequirementsException
-                 | CampaignNameException
-                 | UserPermissionException
-                 | UserNotFoundException exception) {
-            return ResponseEntity.ok(exception.getMessage());
+        } else {
+            throw new UserNotFoundException();
         }
+
     }
 
 
@@ -104,8 +120,13 @@ public class CampaignService {
 //        throw new IllegalArgumentException("User not found.");
 //    }
 
-    public ResponseEntity<?> updateCampaign(Long userId, Long campaignId, String name, String purpose) {
-        try {
+    public Campaign updateCampaign(Long userId, Long campaignId, String name, String purpose) throws
+            CampaignRequirementsException,
+            CampaignNameException,
+            CampaignNotFoundException,
+            UserPermissionException,
+            UserNotFoundException {
+
             if (name == null || purpose == null) {
                 throw new CampaignRequirementsException();
             }
@@ -140,7 +161,7 @@ public class CampaignService {
                         campaign.setPurpose(purpose);
                         campaignRepository.save(campaign);
 
-                        return ResponseEntity.ok(campaign);
+                        return campaign;
                     } else {
                         throw new CampaignNotFoundException();
                     }
@@ -150,13 +171,7 @@ public class CampaignService {
             } else {
                 throw new UserNotFoundException();
             }
-        } catch (CampaignRequirementsException
-                 | CampaignNameException
-                 | CampaignNotFoundException
-                 | UserPermissionException
-                 | UserNotFoundException exception) {
-            return ResponseEntity.ok(exception.getMessage());
-        }
+
     }
 
 
@@ -195,8 +210,12 @@ public class CampaignService {
 //    }
 
 
-    public ResponseEntity<?> deleteCampaignById(Long userId, Long campaignId) {
-        try {
+    public Campaign deleteCampaignById(Long userId, Long campaignId) throws
+            UserIdException,
+            CampaignIdException,
+            CampaignNotFoundException,
+            UserPermissionException {
+
             if (userId == null) {
                 throw new UserIdException();
             }
@@ -205,27 +224,35 @@ public class CampaignService {
                 throw new CampaignIdException();
             }
 
-            Optional<User> userADMIN = userRepository.findById(userId);
-            if (userADMIN.isPresent()) {
-                PermissionEnum adminPermissionToCheck = PermissionEnum.CAMP_MANAGEMENT;
-                for (Role adminRole : userADMIN.get().getRoles()) {
-                    if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
-                        Optional<Campaign> campaign = campaignRepository.findById(campaignId);
-                        if(campaign.isPresent()){
-                            campaignRepository.deleteById(campaignId);
-                            return ResponseEntity.ok(campaign);
-                        }
-                        else
-                            throw new CampaignNotFoundException();
-                    }
-                    else
-                        throw new UserPermissionException();
-                }
+            if (!checkUserPermission(userId, permission)) {
+                throw new UserPermissionException();
             }
-            throw new UserNotFoundException();
-        } catch (UserIdException | CampaignIdException | CampaignNotFoundException | UserPermissionException | UserNotFoundException exception) {
-            return ResponseEntity.ok(exception.getMessage());
-        }
+
+            Campaign campaign = campaignRepository.findById(campaignId)
+                .orElseThrow(CampaignNotFoundException::new);
+
+            campaignRepository.deleteById(campaignId);
+            return campaign;
+
+//            Optional<User> userADMIN = userRepository.findById(userId);
+//            if (userADMIN.isPresent()) {
+//                PermissionEnum adminPermissionToCheck = PermissionEnum.CAMP_MANAGEMENT;
+//                for (Role adminRole : userADMIN.get().getRoles()) {
+//                    if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
+//                        Optional<Campaign> campaign = campaignRepository.findById(campaignId);
+//                        if(campaign.isPresent()){
+//                            campaignRepository.deleteById(campaignId);
+//                            return campaign;
+//                        }
+//                        else
+//                            throw new CampaignNotFoundException();
+//                    }
+//                    else
+//                        throw new UserPermissionException();
+//                }
+//            }
+//            throw new UserNotFoundException();
+
     }
 
 
