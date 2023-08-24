@@ -1,5 +1,7 @@
 package de.msg.javatraining.donationmanager.controller.auth;
 
+import de.msg.javatraining.donationmanager.persistence.model.Role;
+
 import java.util.List;
 
 public class SignInResponse {
@@ -10,6 +12,7 @@ public class SignInResponse {
 	private String username;
 	private String email;
 	private List<String> roles;
+	private List<String> permission;
 	private boolean firstLogin;
 
 	public SignInResponse(String accessToken, String refreshToken, Long id, String username, String email, boolean firstLogin, List<String> roles) {

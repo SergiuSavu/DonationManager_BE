@@ -39,7 +39,7 @@ public class CampaignController {
         try {
             Campaign camp = campaignService.createCampaign(userId, campaign.getName(), campaign.getPurpose());
             if (camp != null) {
-                return ResponseEntity.ok("Campaign created successfully!");
+                return ResponseEntity.ok("");
             }
             return ResponseEntity.ok("Donation has not been created!");
         } catch (UserPermissionException
@@ -50,12 +50,6 @@ public class CampaignController {
         }
 
 
-//        ResponseEntity<?> camp = campaignService.createCampaign(userId,campaign.getName(),campaign.getPurpose());
-//        if(camp.getStatusCode() == HttpStatus.OK){
-//            return ResponseEntity.ok("Campaign created successfully!");
-//        }else{
-//            return ResponseEntity.ok("Campaign has not been created!");
-//        }
 
     }
 
@@ -65,7 +59,7 @@ public class CampaignController {
         try {
             Campaign camp = campaignService.updateCampaign(userId, campId, newCampaign.getName(), newCampaign.getPurpose());
             if (camp != null) {
-                return ResponseEntity.ok("Campaign updated successfully!");
+                return ResponseEntity.ok("");
             }
             return ResponseEntity.ok("Campaign has not been updated!");
         } catch (UserPermissionException
@@ -78,13 +72,7 @@ public class CampaignController {
 
 
 
-//        ResponseEntity<?> camp =campaignService.updateCampaign(userId,campId, newCampaign.getName(), newCampaign.getPurpose());
-//
-//            if(camp.getStatusCode() == HttpStatus.OK){
-//                return ResponseEntity.ok("Campaign updated successfully!");
-//            }else{
-//                return ResponseEntity.ok("Campaign has not been updated!");
-//            }
+
     }
 
     @DeleteMapping("/{campId}/{userId}")
@@ -93,7 +81,7 @@ public class CampaignController {
             if (!donationService.findDonationsByCampaignId(campId)) {
                 Campaign camp = campaignService.deleteCampaignById(userId, campId);
                 if (camp != null) {
-                    return ResponseEntity.ok("Campaign has been deleted!");
+                    return ResponseEntity.ok("");
                 }
                 return ResponseEntity.ok("Campaign can't be deleted!");
             }
@@ -104,18 +92,6 @@ public class CampaignController {
                  | UserIdException exception) {
             return ResponseEntity.ok(exception.getMessage());
         }
-        //        if(!donationService.findDonationsByCampaignId(campId))
-//        {
-//            ResponseEntity<?> camp = campaignService.deleteCampaignById(userId,campId);
-//            if(camp.getStatusCode() == HttpStatus.OK){
-//                return ResponseEntity.ok("Campaign has been deleted!");
-//            }else{
-//                return ResponseEntity.ok("Campaign can't be deleted!");
-//            }
-//
-//        }
-//        else
-//            return ResponseEntity.ok("Deletion failed: Campaign has paid Donations!");
-//    }
+
     }
 }

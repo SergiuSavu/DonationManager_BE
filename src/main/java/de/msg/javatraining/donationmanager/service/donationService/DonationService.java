@@ -507,4 +507,8 @@ public class DonationService {
         }
 
     }
+
+    public List<Donation> getDonationsByCampaignId(Long id){
+        return donationRepository.findDonationsByCampaignId(id);
+    }
 }

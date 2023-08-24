@@ -28,6 +28,11 @@ public class DonatorController {
         return donatorService.getAllDonators();
     }
 
+    @GetMapping("/camp/{campaignId}")
+    public List<Donator> getDonatorsByCampaignId(@PathVariable("campaignId") Long campaignId){
+        return donatorService.getDonatorsByCampaignId(campaignId);
+    }
+
     @GetMapping("/{donatorId}")
     public ResponseEntity<?> getDonator(@PathVariable("donatorId") Long donatorId) {
         try {
