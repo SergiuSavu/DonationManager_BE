@@ -8,16 +8,21 @@ import de.msg.javatraining.donationmanager.persistence.model.PermissionEnum;
 import de.msg.javatraining.donationmanager.persistence.model.Role;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.exceptions.user.UserPermissionException;
+import de.msg.javatraining.donationmanager.persistence.notificationSystem.NotificationParameter;
+import de.msg.javatraining.donationmanager.persistence.notificationSystem.NotificationType;
 import de.msg.javatraining.donationmanager.persistence.repository.CampaignRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.DonationRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.DonatorRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
+import de.msg.javatraining.donationmanager.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +40,9 @@ public class DonationService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     private final PermissionEnum permission = PermissionEnum.DONATION_MANAGEMENT;
 
@@ -86,24 +94,18 @@ public class DonationService {
 //                .orElseThrow(() -> new DonationNotFoundException("Donation not found")));
 //    }
 
-    public Donation getDonationById(Long id) throws DonationNotFoundException {
-        Donation donation = donationRepository.findById(id)
-                .orElseThrow(DonationNotFoundException::new);
-        return donation;
+    public ResponseEntity<?> getDonationById(Long id) throws DonationNotFoundException {
+        Donation donation;
+        try {
+            if (donationRepository.findById(id).isEmpty()) {
+                throw new DonationNotFoundException();
+            }
+            donation = donationRepository.findById(id).get();
+        } catch (DonationNotFoundException exception) {
+            return ResponseEntity.ok(exception.getMessage());
+        }
+        return ResponseEntity.ok(donation);
     }
-
-//    public ResponseEntity<?> getDonationById(Long id) throws DonationNotFoundException {
-//        Donation donation;
-//        try {
-//            if (donationRepository.findById(id).isEmpty()) {
-//                throw new DonationNotFoundException();
-//            }
-//            donation = donationRepository.findById(id).get();
-//        } catch (DonationNotFoundException exception) {
-//            return ResponseEntity.ok(exception.getMessage());
-//        }
-//        return ResponseEntity.ok(donation);
-//    }
 
 //    public Donation createDonation(Long userId, Long donatorId, Long campaignId, Donation donation) {
 //        if (checkDonationRequirements(donation)) {
@@ -154,73 +156,45 @@ public class DonationService {
 //        }
 //    }
 
-//    public ResponseEntity<?> createDonation(Long userId, Long donatorId, Long campaignId, Donation donation) {
-//        try {
-//            if (!checkDonationRequirements(donation)) {
-//                throw new DonationRequirementsException();
-//            }
-//
-//            if (!checkUserPermission(userId, permission)) {
-//                throw new UserPermissionException();
-//            }
-//
-//            if (!checkExistance(donatorId, campaignId)) {
-//                throw new IllegalArgumentException();
-//            }
-//
-//            Optional<User> user = userRepository.findById(userId);
-//            Optional<Donator> donator = donatorRepository.findById(donatorId);
-//            Optional<Campaign> campaign = campaignRepository.findById(campaignId);
-//
-//            if (user.isPresent() && donator.isPresent() && campaign.isPresent()) {
-//                donation.setCreatedBy(user.get());
-//                donation.setDonator(donator.get());
-//                donation.setCampaign(campaign.get());
-//                donation.setCreatedDate(LocalDate.now());
-//                donation.setApproved(false);
-//                donationRepository.save(donation);
-//                return ResponseEntity.ok(donation);
-//            } else {
-//                throw new IllegalArgumentException();
-//            }
-//        } catch (DonationRequirementsException | UserPermissionException | IllegalArgumentException exception) {
-//            return ResponseEntity.ok(exception.getMessage());
-//        }
-//    }
+    public ResponseEntity<?> createDonation(Long userId, Long donatorId, Long campaignId, Donation donation) {
+        try {
+            if (!checkDonationRequirements(donation)) {
+                throw new DonationRequirementsException();
+            }
 
-    public Donation createDonation(Long userId, Long donatorId, Long campaignId, Donation donation) throws
-            DonationRequirementsException,
-            UserPermissionException,
-            DonationException {
-        if (!checkDonationRequirements(donation)) {
-            throw new DonationRequirementsException();
-        }
+            if (!checkUserPermission(userId, permission)) {
+                throw new UserPermissionException();
+            }
 
-        if (!checkUserPermission(userId, permission)) {
-            throw new UserPermissionException();
-        }
+            if (!checkExistance(donatorId, campaignId)) {
+                throw new IllegalArgumentException();
+            }
 
-        if (!checkExistance(donatorId, campaignId)) {
-            throw new DonationException("Problem with DonatorId or CampaignId");
-        }
+            Optional<User> user = userRepository.findById(userId);
+            Optional<Donator> donator = donatorRepository.findById(donatorId);
+            Optional<Campaign> campaign = campaignRepository.findById(campaignId);
 
-        Optional<User> user = userRepository.findById(userId);
-        Optional<Donator> donator = donatorRepository.findById(donatorId);
-        Optional<Campaign> campaign = campaignRepository.findById(campaignId);
+            if (user.isPresent() && donator.isPresent() && campaign.isPresent()) {
+                donation.setCreatedBy(user.get());
+                donation.setDonator(donator.get());
+                donation.setCampaign(campaign.get());
+                donation.setCreatedDate(LocalDate.now());
+                donation.setApproved(false);
+                donationRepository.save(donation);
 
-        if (user.isPresent() && donator.isPresent() && campaign.isPresent()) {
-            donation.setCreatedBy(user.get());
-            donation.setDonator(donator.get());
-            donation.setCampaign(campaign.get());
-            donation.setCreatedDate(LocalDate.now());
-            donation.setApproved(false);
-            donationRepository.save(donation);
-            return donation;
-        } else {
-            throw new DonationException("User and/or donator and/or campaign not present!");
+                List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
+                        new NotificationParameter(String.valueOf(donation.getAmount()))
+                ));
+                notificationService.saveNotification(user.get(), parameters, NotificationType.DONATION_APPROVED);
+
+                return ResponseEntity.ok(donation);
+            } else {
+                throw new IllegalArgumentException();
+            }
+        } catch (DonationRequirementsException | UserPermissionException | IllegalArgumentException exception) {
+            return ResponseEntity.ok(exception.getMessage());
         }
     }
-
 
 
 //    public Donation deleteDonationById(Long userId, Long donationId) {
@@ -276,38 +250,7 @@ public class DonationService {
         if (!checkUserPermission(userId, permission)) {
             throw new UserPermissionException();
         }
-
-        donationRepository.deleteById(donationId);
-        return donation;
     }
-
-//    public ResponseEntity<?> deleteDonationById(Long userId, Long donationId) {
-//        try {
-//            if (donationId == null) {
-//                throw new DonationIdException();
-//            }
-//            Optional<Donation> donation = donationRepository.findById(donationId);
-//            if (donation.isPresent()) {
-//                if (!donation.get().isApproved()) {
-//                    if (checkUserPermission(userId, permission)) {
-//                        donationRepository.deleteById(donationId);
-//                        return ResponseEntity.ok(donation);
-//                    } else {
-//                        throw new UserPermissionException();
-//                    }
-//                } else {
-//                    throw new DonationApprovedException();
-//                }
-//            } else {
-//                throw new DonationNotFoundException();
-//            }
-//        } catch (DonationIdException
-//                 | UserPermissionException
-//                 | DonationApprovedException
-//                 | DonationNotFoundException exception) {
-//            return ResponseEntity.ok(exception.getMessage());
-//        }
-//    }
 
 //    public Donation updateDonation(Long userId, Long donationId, Donation updatedDonation) {
 //        if (donationId == null) {
@@ -477,7 +420,6 @@ public class DonationService {
         donationRepository.save(existingDonation);
         return existingDonation;
     }
-
 
     public boolean findDonationsByDonatorId(Long donatorId) {
         try {
