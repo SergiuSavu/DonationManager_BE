@@ -19,6 +19,7 @@ import de.msg.javatraining.donationmanager.persistence.repository.CampaignReposi
 import de.msg.javatraining.donationmanager.persistence.repository.DonationRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.DonorRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
+import de.msg.javatraining.donationmanager.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

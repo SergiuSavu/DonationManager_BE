@@ -55,8 +55,8 @@ public class DonorService {
 //                .orElseThrow(() -> new IllegalStateException("Donator with id: " + id + " does not exist.")));
 //    }
 
-    public List<Donator> getDonatorsByCampaignId(Long id){
-        return donatorRepository.findDonatorsByCampaignId(id);
+    public List<Donor> getDonatorsByCampaignId(Long id){
+        return donorRepository.findDonatorsByCampaignId(id);
     }
 
 

@@ -28,8 +28,8 @@ public class DonorController {
     }
 
     @GetMapping("/camp/{campaignId}")
-    public List<Donator> getDonatorsByCampaignId(@PathVariable("campaignId") Long campaignId){
-        return donatorService.getDonatorsByCampaignId(campaignId);
+    public List<Donor> getDonatorsByCampaignId(@PathVariable("campaignId") Long campaignId){
+        return donorService.getDonatorsByCampaignId(campaignId);
     }
 
     @GetMapping("/{donatorId}")
