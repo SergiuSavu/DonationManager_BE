@@ -1,10 +1,10 @@
-package de.msg.javatraining.donationmanager.persistence.donatorModel;
+package de.msg.javatraining.donationmanager.persistence.donorModel;
 
 import jakarta.persistence.*;
 
 @Entity
-@Table(	name = "donator")
-public class Donator {
+@Table(	name = "donor")
+public class Donor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -54,12 +54,12 @@ public class Donator {
         return id;
     }
 
-    public Donator(String firstName, String lastName, String additionalName, String maidenName) {
+    public Donor(String firstName, String lastName, String additionalName, String maidenName) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.additionalName = additionalName;
         this.maidenName = maidenName;
     }
 
-    public Donator(){}
+    public Donor(){}
 }
