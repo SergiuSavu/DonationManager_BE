@@ -212,6 +212,12 @@ public class DonationService {
         donation.setApproved(true);
         donation.setApproveDate(LocalDate.now());
         donationRepository.save(donation);
+
+        List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
+                new NotificationParameter(String.valueOf(donation.getAmount()))
+        ));
+        notificationService.saveNotification(user, parameters, NotificationType.DONATION_APPROVED);
+
         return donation;
     }
 
@@ -242,10 +248,6 @@ public class DonationService {
             donation.setCreatedDate(LocalDate.now());
             donation.setApproved(false);
             donationRepository.save(donation);
-            List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
-                    new NotificationParameter(String.valueOf(donation.getAmount()))
-            ));
-            notificationService.saveNotification(user.get(), parameters, NotificationType.DONATION_APPROVED);
 
             return donation;
         } else {
