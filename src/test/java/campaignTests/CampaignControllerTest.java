@@ -1,6 +1,13 @@
 package campaignTests;
 
 import de.msg.javatraining.donationmanager.controller.campaign.CampaignController;
+import de.msg.javatraining.donationmanager.exceptions.campaign.CampaignIdException;
+import de.msg.javatraining.donationmanager.exceptions.campaign.CampaignNameException;
+import de.msg.javatraining.donationmanager.exceptions.campaign.CampaignNotFoundException;
+import de.msg.javatraining.donationmanager.exceptions.campaign.CampaignRequirementsException;
+import de.msg.javatraining.donationmanager.exceptions.user.UserIdException;
+import de.msg.javatraining.donationmanager.exceptions.user.UserNotFoundException;
+import de.msg.javatraining.donationmanager.exceptions.user.UserPermissionException;
 import de.msg.javatraining.donationmanager.persistence.campaignModel.Campaign;
 import de.msg.javatraining.donationmanager.service.campaignService.CampaignService;
 import de.msg.javatraining.donationmanager.service.donationService.DonationService;
@@ -51,7 +58,7 @@ public class CampaignControllerTest {
     }
 
     @Test
-    public void testCreateCampaign() {
+    public void testCreateCampaign() throws UserPermissionException, UserNotFoundException, CampaignNameException, CampaignRequirementsException {
         Campaign mockCampaign = new Campaign("New Campaign", "New Purpose");
         Long userId = 1L;
 
@@ -64,7 +71,7 @@ public class CampaignControllerTest {
     }
 
     @Test
-    public void testUpdateCampaign() {
+    public void testUpdateCampaign() throws UserPermissionException, UserNotFoundException, CampaignNameException, CampaignNotFoundException, CampaignRequirementsException {
         // Prepare mock campaign and user IDs
         Campaign mockCampaign = new Campaign("Updated Campaign", "Updated Purpose");
         Long userId = 1L;
@@ -80,7 +87,7 @@ public class CampaignControllerTest {
     }
 
     @Test
-    public void testDeleteCampaignById() {
+    public void testDeleteCampaignById() throws UserPermissionException, CampaignIdException, CampaignNotFoundException, UserIdException {
         Long userId = 1L;
         Long campId = 2L;
 
