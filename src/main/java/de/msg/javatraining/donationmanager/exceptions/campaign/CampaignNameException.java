@@ -10,4 +10,5 @@ public class CampaignNameException extends CampaignException {
     public CampaignNameException(String message) {
         super(message);
     }
+
 }

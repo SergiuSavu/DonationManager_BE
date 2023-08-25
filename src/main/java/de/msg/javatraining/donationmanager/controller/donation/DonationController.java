@@ -41,6 +41,11 @@ public class DonationController {
         // return donationService.getDonationById(donationId);
     }
 
+    @GetMapping("/camp/{campaignId}")
+    public List<Donation> getDonationsByCampaignId(@PathVariable("campaignId") Long campaignId){
+        return donationService.getDonationsByCampaignId(campaignId);
+    }
+
     @PostMapping("/{donatorId}/{campaignId}/{userId}")
     public ResponseEntity<?> createDonation(@PathVariable("userId") Long userId,
                                             @PathVariable("donatorId") Long donatorId,
