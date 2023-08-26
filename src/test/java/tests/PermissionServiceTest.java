@@ -7,6 +7,7 @@ import de.msg.javatraining.donationmanager.persistence.model.Role;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.persistence.repository.RoleRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
+import de.msg.javatraining.donationmanager.service.LogService;
 import de.msg.javatraining.donationmanager.service.permissionService.PermissionService;
 import org.hibernate.ObjectNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +35,9 @@ class PermissionServiceTest {
     private  RoleRepository roleRepository;
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private LogService logService;
 
     //@Mock
     //private PermissionRepository permissionRepository;
