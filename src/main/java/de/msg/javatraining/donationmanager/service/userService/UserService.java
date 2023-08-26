@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import static de.msg.javatraining.donationmanager.persistence.notificationSystem.NotificationParameter.deepCopyList;
 
@@ -254,6 +255,8 @@ public class UserService {
         }
 
         userRepository.save(user);
+
+        if (!Objects.equals(userFromToken.getId(), user.getId())){
         List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
                 new NotificationParameter(oldUser.getFirstName()),
                 new NotificationParameter(oldUser.getLastName()),
@@ -270,7 +273,7 @@ public class UserService {
 
         notificationService.saveNotification(user, parameters, NotificationType.USER_UPDATED);
         notificationService.saveNotification(userFromToken, copiedParameters, NotificationType.USER_UPDATED);
-    }
+    }}
 
     private void userValidations(User user) throws UserException {
         if (userRepository.existsByEmail(user.getEmail())) {

@@ -71,6 +71,7 @@ public class AuthController {
     }
     catch (AuthenticationException e) {
       if (userService.existsByUsername(loginRequest.getUsername())){
+        userService.updateRetryCount(loginRequest.getUsername());
         return new ResponseEntity<>("Password is wrong.", HttpStatus.FORBIDDEN);
       }
       return new ResponseEntity<>("Username is wrong.", HttpStatus.FORBIDDEN);
