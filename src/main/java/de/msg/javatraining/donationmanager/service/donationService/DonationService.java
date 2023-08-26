@@ -19,15 +19,13 @@ import de.msg.javatraining.donationmanager.persistence.repository.CampaignReposi
 import de.msg.javatraining.donationmanager.persistence.repository.DonationRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.DonorRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
+import de.msg.javatraining.donationmanager.service.LogService;
 import de.msg.javatraining.donationmanager.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class DonationService {
@@ -46,6 +44,9 @@ public class DonationService {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private LogService logService;
 
     private final PermissionEnum permission = PermissionEnum.DONATION_MANAGEMENT;
 
@@ -198,16 +199,30 @@ public class DonationService {
 //        }
 //    }
 
-    public Donation approveDonation(Long donationId, Long userId) throws DonationNotFoundException, UserNotFoundException {
+    public Donation approveDonation(Long donationId, Long userId) throws DonationNotFoundException, UserNotFoundException, DonationApprovedException, DonationUserException {
+        User user = userRepository.findById(userId).get();
         if (userRepository.findById(userId).isEmpty()) {
+            logService.logOperation("ERROR", "User not found!", user.getUsername());
             throw new UserNotFoundException();
         }
         if (donationRepository.findById(donationId).isEmpty()) {
+            logService.logOperation("ERROR", "Donation not found!", user.getUsername());
             throw new DonationNotFoundException();
         }
 
         Donation donation = donationRepository.findById(donationId).get();
-        User user = userRepository.findById(userId).get();
+
+        if (donation.isApproved()) {
+            logService.logOperation("ERROR", "Donation has already been approved! Can't delete an approved Donation!", user.getUsername());
+            throw new DonationApprovedException();
+        }
+
+        if (Objects.equals(donation.getCreatedBy().getId(), userId)) {
+            logService.logOperation("ERROR", "Donation needs to be approved by a different user than the one who created it!", user.getUsername());
+            throw new DonationUserException();
+        }
+
+
         donation.setApprovedBy(user);
         donation.setApproved(true);
         donation.setApproveDate(LocalDate.now());
@@ -225,19 +240,24 @@ public class DonationService {
             DonationRequirementsException,
             UserPermissionException,
             DonationException {
+        Optional<User> user = userRepository.findById(userId);
+
         if (!checkDonationRequirements(donation)) {
+            logService.logOperation("ERROR", "Donation requirements not met!", user.get().getUsername());
             throw new DonationRequirementsException();
         }
 
         if (!checkUserPermission(userId, permission)) {
+            logService.logOperation("ERROR", "User does not have the required permission/s!", user.get().getUsername());
             throw new UserPermissionException();
         }
 
         if (!checkExistance(donatorId, campaignId)) {
+            logService.logOperation("ERROR", "Eroare din DonationException class!", user.get().getUsername());
             throw new DonationException("Problem with DonatorId or CampaignId");
         }
 
-        Optional<User> user = userRepository.findById(userId);
+
         Optional<Donor> donator = donorRepository.findById(donatorId);
         Optional<Campaign> campaign = campaignRepository.findById(campaignId);
 
@@ -248,9 +268,10 @@ public class DonationService {
             donation.setCreatedDate(LocalDate.now());
             donation.setApproved(false);
             donationRepository.save(donation);
-
+            logService.logOperation("INSERT", "Created donation", user.get().getUsername());
             return donation;
         } else {
+            logService.logOperation("ERROR", "User and/or donator and/or campaign not present!", user.get().getUsername());
             throw new DonationException("User and/or donator and/or campaign not present!");
         }
     }
@@ -296,26 +317,35 @@ public class DonationService {
             DonationNotFoundException,
             DonationApprovedException,
             UserPermissionException {
+        Optional<User> user = userRepository.findById(userId);
+
         if (donationId == null) {
+            logService.logOperation("ERROR", "Id can't be null!", user.get().getUsername());
             throw new DonationIdException();
         }
 
         Optional<Donation> donation = donationRepository.findById(donationId);
                 //.orElseThrow(DonationNotFoundException::new);
 
+
         if (donation.isEmpty()) {
+            logService.logOperation("ERROR", "DonationNotFOundException: Donation not found!", user.get().getUsername());
             throw new DonationNotFoundException();
         }
 
         if (donation.get().isApproved()) {
+            logService.logOperation("ERROR", "Donation has already been approved! Can't delete an approved Donation!", user.get().getUsername());
             throw new DonationApprovedException();
         }
 
         if (!checkUserPermission(userId, permission)) {
+            logService.logOperation("ERROR", "User does not have the required permission/s!", user.get().getUsername());
             throw new UserPermissionException();
         }
 
         donationRepository.deleteById(donationId);
+        logService.logOperation("DELETE", "Deleted donation", user.get().getUsername());
+
         return donation.get();
     }
 
@@ -459,18 +489,23 @@ public class DonationService {
             DonationNotFoundException,
             DonationApprovedException {
 
+        Optional<User> user = userRepository.findById(userId);
+
         // Check if donationId is null
         if (donationId == null) {
+            logService.logOperation("ERROR", "Id can't be null!", user.get().getUsername());
             throw new DonationIdException();
         }
 
         // Check if the updated donation meets the requirements
         if (!checkDonationRequirements(updatedDonation)) {
+            logService.logOperation("ERROR", "Donation requirements not met!", user.get().getUsername());
             throw new DonationRequirementsException();
         }
 
         // Check user permission
         if (!checkUserPermission(userId, permission)) {
+            logService.logOperation("ERROR", "User does not have the required permission/s!", user.get().getUsername());
             throw new UserPermissionException();
         }
 
@@ -479,11 +514,13 @@ public class DonationService {
 
         // Check if the donation exists
         if (donation.isEmpty()) {
+            logService.logOperation("ERROR", "DonationNotFOundException: Donation not found!", user.get().getUsername());
             throw new DonationNotFoundException();
         }
 
         // Check if the donation is not approved
         if (donation.get().isApproved()) {
+            logService.logOperation("ERROR", "Donation has already been approved! Can't delete an approved Donation!", user.get().getUsername());
             throw new DonationApprovedException();
         }
 
@@ -504,15 +541,17 @@ public class DonationService {
         if (updatedDonation.getNotes() != null) {
             existingDonation.setNotes(updatedDonation.getNotes());
         }
-        if (updatedDonation.getCreatedDate() != null) {
-            existingDonation.setCreatedDate(updatedDonation.getCreatedDate());
-        }
-        if (updatedDonation.getCreatedBy() != null) {
-            existingDonation.setCreatedBy(updatedDonation.getCreatedBy());
-        }
+//        if (updatedDonation.getCreatedDate() != null) {
+//            existingDonation.setCreatedDate(updatedDonation.getCreatedDate());
+//        }
+//        if (updatedDonation.getCreatedBy() != null) {
+//            existingDonation.setCreatedBy(updatedDonation.getCreatedBy());
+//        }
 
         // Save the updated donation
         donationRepository.save(existingDonation);
+        logService.logOperation("UPDATE", "Updated donation", user.get().getUsername());
+
         return existingDonation;
     }
 

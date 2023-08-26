@@ -67,35 +67,40 @@ public class DonationController {
                                             @PathVariable("donationId") Long donationId,
                                             @RequestBody Donation newDonation) {
 
+        ResponseEntity<?> response;
         try {
             Donation don = donationService.updateDonation(userId, donationId, newDonation);
-            if (don != null) {
-                return ResponseEntity.ok("Donation updated successfully!");
-            }
-            return ResponseEntity.ok("Donation has not been updated!");
+//            if (don != null) {
+//                return ResponseEntity.ok("Donation updated successfully!");
+//            }
+//            return ResponseEntity.ok("Donation has not been updated!");
+            response = new ResponseEntity<>(don, HttpStatusCode.valueOf(200));
         } catch (DonationRequirementsException
                  | DonationIdException
                  | UserPermissionException
                  | DonationNotFoundException
                  | DonationApprovedException exception) {
-            return ResponseEntity.ok(exception.getMessage());
+            response = new ResponseEntity<>(exception, HttpStatusCode.valueOf(200));
         }
-
+        return response;
     }
 
     @PatchMapping("/{donationId}/{userId}")
     public ResponseEntity<?> approveDonation(@PathVariable("donationId") Long donationId, @PathVariable("userId") Long userId) {
+        ResponseEntity<?> response;
         try {
             Donation donation = donationService.getDonationById(donationId);
-            if (!Objects.equals(donation.getCreatedBy().getId(), userId)) {
-                if (!donation.isApproved()) {
-                    donationService.approveDonation(donationId, userId);
-                }
-            }
-            return ResponseEntity.ok("Changes happened!");
-        } catch (DonationNotFoundException | UserNotFoundException exception) {
-            return ResponseEntity.ok(exception.getMessage());
+            donationService.approveDonation(donationId, userId);
+//            if (!Objects.equals(donation.getCreatedBy().getId(), userId)) {
+//                if (!donation.isApproved()) {
+//                    donationService.approveDonation(donationId, userId);
+//                }
+//            }
+            response = new ResponseEntity<>(donation, HttpStatusCode.valueOf(200));
+        } catch (DonationNotFoundException | UserNotFoundException | DonationApprovedException | DonationUserException exception) {
+            response = new ResponseEntity<>(exception, HttpStatusCode.valueOf(200));
         }
+        return response;
     }
 
     @DeleteMapping("/{donationId}/{userId}")
@@ -106,21 +111,24 @@ public class DonationController {
         ResponseEntity<?> response;
         try {
             Donation donation = donationService.getDonationById(donationId);
-            if (donation != null) {
-                if (!donation.isApproved()) {
-                    donationService.deleteDonationById(userId, donationId);
-                    return ResponseEntity.ok("Donation has been deleted!");
-                }
-                return ResponseEntity.ok("Can't delete a donation which has been approved!");
-            }
-            return ResponseEntity.ok("Donation with given id does not exist!");
+            donationService.deleteDonationById(userId, donationId);
+//            if (donation != null) {
+//                if (!donation.isApproved()) {
+//                    donationService.deleteDonationById(userId, donationId);
+//                    return ResponseEntity.ok("Donation has been deleted!");
+//                }
+//                return ResponseEntity.ok("Can't delete a donation which has been approved!");
+//            }
+//            return ResponseEntity.ok("Donation with given id does not exist!");
+            response = new ResponseEntity<>(donation, HttpStatusCode.valueOf(200));
         } catch (DonationIdException
                  | DonationNotFoundException
                  | DonationApprovedException
                  | UserPermissionException exception) {
-            return ResponseEntity.ok(exception.getMessage());
-        }
+            response = new ResponseEntity<>(exception, HttpStatusCode.valueOf(200));
 
+        }
+        return response;
     }
 
 }
