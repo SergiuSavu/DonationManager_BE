@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.Objects;
 
 import static de.msg.javatraining.donationmanager.persistence.notificationSystem.NotificationParameter.deepCopyList;
 
@@ -157,7 +158,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public ResponseEntity<?> updateRetryCount(String username) {
+    public void updateRetryCount(String username) {
         try {
             if (userRepository.findByUsername(username).isEmpty()) {
                 throw new IllegalStateException("User with username: " + username + " does not exist.");
@@ -190,10 +191,11 @@ public class UserService {
             //TODO: inca mai sunt erori prost tratate
             userRepository.save(user);
         } catch (IllegalStateException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+            new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+            return;
         }
 
-        return new ResponseEntity<>("Retry count updated", HttpStatus.OK);
+        new ResponseEntity<>("Retry count updated", HttpStatus.OK);
     }
 
 
@@ -263,6 +265,8 @@ public class UserService {
         }
 
         userRepository.save(user);
+
+        if (!Objects.equals(userFromToken.getId(), user.getId())){
         List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
                 new NotificationParameter(oldUser.getFirstName()),
                 new NotificationParameter(oldUser.getLastName()),
@@ -279,7 +283,7 @@ public class UserService {
 
         notificationService.saveNotification(user, parameters, NotificationType.USER_UPDATED);
         notificationService.saveNotification(userFromToken, copiedParameters, NotificationType.USER_UPDATED);
-    }
+    }}
 
     private void userValidations(User user) throws UserException {
         if (userRepository.existsByEmail(user.getEmail())) {
