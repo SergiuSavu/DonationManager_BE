@@ -200,6 +200,7 @@ public class UserService {
 
 
     public void updateUser(User userFromToken, Long id, User newUser) throws UserException {
+        boolean onlyActiveNotNull = true;
         if (userRepository.findById(id).isEmpty()) {
             throw new UserException("User with id: " + id + " does not exist.", "USER_DOES_NOT_EXIST");
         }
@@ -210,31 +211,37 @@ public class UserService {
 
         if (newUser.getFirstName() != null) {
             user.setFirstName(newUser.getFirstName());
+            onlyActiveNotNull = false;
         }
         if (newUser.getLastName() != null) {
             user.setLastName(newUser.getLastName());
+            onlyActiveNotNull = false;
         }
         if (newUser.getMobileNumber() != null) {
             if (!user.getMobileNumber().matches("^(?:\\+?40|0)?7\\d{8}$")) {
                 throw new UserException("Mobile number is not valid.", "MOBILE_NUMBER_NOT_VALID");
             }
             user.setMobileNumber(newUser.getMobileNumber());
+            onlyActiveNotNull = false;
         }
         if (newUser.getEmail() != null) {
             if (!user.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
                 throw new UserException("Email is not valid.", "EMAIL_NOT_VALID");
             }
-
             user.setEmail(newUser.getEmail());
+            onlyActiveNotNull = false;
         }
         if (newUser.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(newUser.getPassword()));
+            onlyActiveNotNull = false;
         }
         if (!newUser.getRoles().isEmpty()) {
             user.setRoles(newUser.getRoles());
+            onlyActiveNotNull = false;
         }
         if (!newUser.getCampaigns().isEmpty()) {
             user.setCampaigns(newUser.getCampaigns());
+            onlyActiveNotNull = false;
         }
         if (!newUser.isFirstLogin())
             user.setFirstLogin(false);
@@ -266,7 +273,7 @@ public class UserService {
 
         userRepository.save(user);
 
-        if (!Objects.equals(userFromToken.getId(), user.getId())){
+        if (!Objects.equals(userFromToken.getId(), user.getId()) || onlyActiveNotNull){
         List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
                 new NotificationParameter(oldUser.getFirstName()),
                 new NotificationParameter(oldUser.getLastName()),
