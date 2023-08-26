@@ -2,6 +2,7 @@ package de.msg.javatraining.donationmanager.service.userService;
 
 import de.msg.javatraining.donationmanager.controller.dto.UserDTO;
 import de.msg.javatraining.donationmanager.persistence.model.PermissionEnum;
+import de.msg.javatraining.donationmanager.persistence.model.emailRequest.EmailRequest;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.persistence.notificationSystem.NotificationParameter;
 import de.msg.javatraining.donationmanager.persistence.notificationSystem.NotificationType;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static de.msg.javatraining.donationmanager.persistence.notificationSystem.NotificationParameter.deepCopyList;
 
@@ -71,15 +73,21 @@ public class UserService {
         } else {
             User user = userRepository.findById(id).get();
             user.setActive(!user.isActive());
-            if(user.isActive()) {
+            if (user.isActive()) {
                 resetRetryCount(user.getUsername());
             }
             userRepository.save(user);
         }
     }
 
+    /**
+     * A function which generates a username from the first and last name of a user and generates
+     * a random password which needs to be changed after the first login
+     *
+     * @param user user object
+     * @throws UserException a custom exception which returns a message depending on the error
+     */
     public void createUser(User user) throws UserException {
-        userValidations(user);
 
         if (user.getMobileNumber() != null) {
             if (!user.getMobileNumber().matches("^(?:\\+?40|0)?7\\d{8}$")) {
@@ -110,22 +118,23 @@ public class UserService {
         }
         user.setUsername(tempUsername);
 
+        //passwordGeneration
+        String generatedPassword = UUID.randomUUID().toString();
+
         //TODO: De decomentat pentru demo
 
-//            EmailRequest emailRequest = new EmailRequest();
-//            emailRequest.setDestination(user.getEmail());
-//            emailRequest.setSubject("User account created");
-//            emailRequest.setMessage(
-//                    "User account created successfully.\n" +
-//                            "Login information: \n" +
-//                            "Username: " +  user.getUsername() + "\n" +
-//                            "Password: " +  generatedPassword + "\n" +
-//                            "This a randomly generated password that will need to be changed on your first login."
-//            );
-//        emailService.sendSimpleMessage(emailRequest);
-//            user.setPassword(passwordEncoder.encode(generatedPassword));
-////        emailService.sendSimpleMessage(emailRequest);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        EmailRequest emailRequest = new EmailRequest();
+        emailRequest.setDestination(user.getEmail());
+        emailRequest.setSubject("User account created");
+        emailRequest.setMessage(
+                "User account created successfully.\n" +
+                        "Login information: \n" +
+                        "Username: " + user.getUsername() + "\n" +
+                        "Password: " + generatedPassword + "\n" +
+                        "This a randomly generated password that will need to be changed on your first login."
+        );
+        emailService.sendSimpleMessage(emailRequest);
+        user.setPassword(passwordEncoder.encode(generatedPassword));
         userRepository.save(user);
 
         List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
@@ -225,7 +234,7 @@ public class UserService {
         if (!newUser.getCampaigns().isEmpty()) {
             user.setCampaigns(newUser.getCampaigns());
         }
-        if(!newUser.isFirstLogin())
+        if (!newUser.isFirstLogin())
             user.setFirstLogin(false);
 
         if (newUser.isActive() != user.isActive()) {
@@ -282,33 +291,29 @@ public class UserService {
         }
     }
 
-    public ResponseEntity<?> getUserById(Long id) {
+    public UserDTO getUserById(Long id) throws UserException {
         UserDTO userDTO = new UserDTO();
-        try {
-            if (userRepository.findById(id).isEmpty()) {
-                throw new IllegalStateException("User with id: " + id + " does not exist.");
-            }
-            User userFromDB = userRepository.findById(id).get();
-
-
-            userDTO.setId(userFromDB.getId());
-            userDTO.setFirstName(userFromDB.getFirstName());
-            userDTO.setLastName(userFromDB.getLastName());
-            userDTO.setMobileNumber(userFromDB.getMobileNumber());
-            userDTO.setUsername(userFromDB.getUsername());
-            userDTO.setEmail(userFromDB.getEmail());
-            userDTO.setPassword(userFromDB.getPassword());
-            userDTO.setRoles(userFromDB.getRoles());
-            userDTO.setCampaigns(userFromDB.getCampaigns());
-            userDTO.setActive(userFromDB.isActive());
-            userDTO.setFirstLogin(userFromDB.isFirstLogin());
-            userDTO.setRetryCount(userFromDB.getRetryCount());
-
-        //TODO: inca mai sunt erori prost tratate
-        } catch (IllegalStateException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        if (userRepository.findById(id).isEmpty()) {
+            throw new UserException("User with id: " + id + " does not exist.", "USER_DOES_NOT_EXIST");
         }
-        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+
+        User userFromDB = userRepository.findById(id).get();
+
+
+        userDTO.setId(userFromDB.getId());
+        userDTO.setFirstName(userFromDB.getFirstName());
+        userDTO.setLastName(userFromDB.getLastName());
+        userDTO.setMobileNumber(userFromDB.getMobileNumber());
+        userDTO.setUsername(userFromDB.getUsername());
+        userDTO.setEmail(userFromDB.getEmail());
+        userDTO.setPassword(userFromDB.getPassword());
+        userDTO.setRoles(userFromDB.getRoles());
+        userDTO.setCampaigns(userFromDB.getCampaigns());
+        userDTO.setActive(userFromDB.isActive());
+        userDTO.setFirstLogin(userFromDB.isFirstLogin());
+        userDTO.setRetryCount(userFromDB.getRetryCount());
+
+        return userDTO;
     }
 
     public boolean existsByUsername(String username) {

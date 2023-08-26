@@ -28,7 +28,14 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable("id") Long id) {
-        return userService.getUserById(id);
+        ResponseEntity<?> response;
+        try {
+            UserDTO user = userService.getUserById(id);
+            response = new ResponseEntity<>(user, HttpStatusCode.valueOf(200));
+        } catch (UserException exception) {
+            response = new ResponseEntity<>(exception, HttpStatusCode.valueOf(200));
+        }
+        return response;
     }
 
     @PostMapping("/new")
