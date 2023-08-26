@@ -56,15 +56,17 @@ public class DonorController {
 
     @PostMapping("/{userId}")
     public ResponseEntity<?> createDonator(@PathVariable("userId") Long userId, @RequestBody Donor donor) {
+        ResponseEntity<?> response;
         try {
             Donor don = donorService.createDonator(userId, donor);
-            if (don != null) {
-                return ResponseEntity.ok("");
-            }
-            return ResponseEntity.ok("Donator has not been created!");
+//            if (don != null) {
+//                return ResponseEntity.ok("Donator created successfully!");
+//            }
+            response = new ResponseEntity<>(don, HttpStatusCode.valueOf(200));
         } catch (UserPermissionException | DonatorRequirementsException exception) {
-            return ResponseEntity.ok(exception.getMessage());
+            response = new ResponseEntity<>(exception, HttpStatusCode.valueOf(200));
         }
+        return response;
     }
 
 //    @PutMapping("/{donatorId}/{userId}")
@@ -81,19 +83,18 @@ public class DonorController {
     public ResponseEntity<?> updateDonator(@PathVariable("userId") Long userId,
                                            @PathVariable("donatorId") Long donatorId,
                                            @RequestBody Donor newDonor) {
+        ResponseEntity<?> response;
         try {
             Donor don = donorService.updateDonator(userId, donatorId, newDonor);
-            if (don != null) {
-                return ResponseEntity.ok("");
-            } else {
-                return ResponseEntity.ok("Donator has not been updated!");
-            }
+            response = new ResponseEntity<>(don, HttpStatusCode.valueOf(200));
+
         } catch (DonatorIdException
                  | UserPermissionException
                  | DonatorRequirementsException
                  | DonatorNotFoundException exception) {
-            return ResponseEntity.ok(exception.getMessage());
+            response = new ResponseEntity<>(exception, HttpStatusCode.valueOf(200));
         }
+        return response;
     }
 
 //    @DeleteMapping("/{donatorId}/{userId}")
@@ -113,21 +114,23 @@ public class DonorController {
 //    }
 
     @DeleteMapping("/{donatorId}/{userId}")
-    public ResponseEntity<?> deleteDonatorById(@PathVariable("userId") Long userId,
-                                               @PathVariable("donatorId") Long donatorId) {
-
+    public ResponseEntity<?> deleteDonatorById(@PathVariable("userId") Long userId, @PathVariable("donatorId") Long donatorId) {
         ResponseEntity<?> response;
         try {
+            Donor don = donorService.deleteDonatorById(userId, donatorId);
             if (donationService.findDonationsByDonatorId(donatorId)) {
                 Donor updateValues = new Donor("UNKNOWN", "UNKNOWN", "UNKNOWN","UNKNOWN");
                 donorService.updateDonator(userId, donatorId, updateValues);
-                response = new ResponseEntity<>(updateValues, HttpStatusCode.valueOf(200));
+                response = new ResponseEntity<>(don, HttpStatusCode.valueOf(200));
             } else {
-                Donor don = donorService.deleteDonatorById(userId, donatorId);
+                donorService.deleteDonatorById(userId, donatorId);
                 response = new ResponseEntity<>(don, HttpStatusCode.valueOf(200));
             }
-        } catch (DonatorIdException | UserPermissionException | DonatorRequirementsException | DonatorNotFoundException e) {
-            response = new ResponseEntity<>(e, HttpStatusCode.valueOf(200));
+        } catch (DonatorNotFoundException
+                 | DonatorIdException
+                 | UserPermissionException
+                 | DonatorRequirementsException exception) {
+            response = new ResponseEntity<>(exception, HttpStatusCode.valueOf(200));
         }
         return response;
     }

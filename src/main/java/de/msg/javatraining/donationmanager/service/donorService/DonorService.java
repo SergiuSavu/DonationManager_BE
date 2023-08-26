@@ -10,6 +10,7 @@ import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.exceptions.user.UserPermissionException;
 import de.msg.javatraining.donationmanager.persistence.repository.DonorRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
+import de.msg.javatraining.donationmanager.service.LogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,9 @@ public class DonorService {
 
     @Autowired
     private DonorRepository donorRepository;
+
+    @Autowired
+    private LogService logService;
 
     private final PermissionEnum permission = PermissionEnum.BENEF_MANAGEMENT;
 
@@ -114,15 +118,19 @@ public class DonorService {
     public Donor createDonator(Long userId, Donor donor) throws
             UserPermissionException,
             DonatorRequirementsException {
+        Optional<User> user = userRepository.findById(userId);
         if (checkDonatorRequirements(donor)) {
             if (checkUserPermission(userId, permission)) {
                 donorRepository.save(donor);
+                logService.logOperation("INSERT", "Created donator", user.get().getUsername());
                 return donor;
             } else {
-                throw new UserPermissionException("User does not have permission to create a donator.");
+                logService.logOperation("ERROR", "Donator id can't be null!", user.get().getUsername());
+                throw new UserPermissionException("User does not have the required permission/s!");
             }
         } else {
-            throw new DonatorRequirementsException("Donator does not meet the requirements.");
+            logService.logOperation("ERROR", "Donator does not meet the requirements!", user.get().getUsername());
+            throw new DonatorRequirementsException();
         }
     }
 
@@ -169,17 +177,24 @@ public class DonorService {
             DonatorIdException,
             DonatorNotFoundException,
             UserPermissionException {
+
+        Optional<User> user = userRepository.findById(userId);
+
         if (donatorId == null) {
+            logService.logOperation("ERROR", "Donator id can't be null!", user.get().getUsername());
             throw new DonatorIdException();
         }
+
 
         Donor donor = donorRepository.findById(donatorId)
                 .orElseThrow(DonatorNotFoundException::new);
 
         if (checkUserPermission(userId, permission)) {
             donorRepository.deleteById(donatorId);
+            logService.logOperation("DELETE", "Deleted donor", user.get().getUsername());
             return donor;
         } else {
+            logService.logOperation("ERROR", "User does not have the required permission/s!", user.get().getUsername());
             throw new UserPermissionException();
         }
     }
@@ -220,15 +235,19 @@ public class DonorService {
             UserPermissionException,
             DonatorRequirementsException,
             DonatorNotFoundException {
+        Optional<User> user = userRepository.findById(userId);
         if (donatorId == null) {
+            logService.logOperation("ERROR", "Donator id can't be null!", user.get().getUsername());
             throw new DonatorIdException();
         }
 
         if (!checkUserPermission(userId, permission)) {
+            logService.logOperation("ERROR", "User does not have the required permission/s!", user.get().getUsername());
             throw new UserPermissionException();
         }
 
         if (!checkDonatorRequirements(updatedDonor)) {
+            logService.logOperation("ERROR", "Donator requirements not met!", user.get().getUsername());
             throw new DonatorRequirementsException();
         }
 
@@ -248,6 +267,7 @@ public class DonorService {
             donor.setMaidenName(updatedDonor.getMaidenName());
         }
         donorRepository.save(donor);
+        logService.logOperation("UPDATE", "Updated donation", user.get().getUsername());
         return donor;
     }
 
