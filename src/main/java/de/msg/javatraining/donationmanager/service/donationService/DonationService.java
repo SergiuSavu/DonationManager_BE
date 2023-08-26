@@ -201,6 +201,8 @@ public class DonationService {
 
     public Donation approveDonation(Long donationId, Long userId) throws DonationNotFoundException, UserNotFoundException, DonationApprovedException, DonationUserException {
         User user = userRepository.findById(userId).get();
+        Donation donation = donationRepository.findById(donationId).get();
+
         if (userRepository.findById(userId).isEmpty()) {
             logService.logOperation("ERROR", "User not found!", user.getUsername());
             throw new UserNotFoundException();
@@ -209,8 +211,6 @@ public class DonationService {
             logService.logOperation("ERROR", "Donation not found!", user.getUsername());
             throw new DonationNotFoundException();
         }
-
-        Donation donation = donationRepository.findById(donationId).get();
 
         if (donation.isApproved()) {
             logService.logOperation("ERROR", "Donation has already been approved! Can't delete an approved Donation!", user.getUsername());
@@ -222,7 +222,6 @@ public class DonationService {
             throw new DonationUserException();
         }
 
-
         donation.setApprovedBy(user);
         donation.setApproved(true);
         donation.setApproveDate(LocalDate.now());
@@ -233,6 +232,7 @@ public class DonationService {
         ));
         notificationService.saveNotification(user, parameters, NotificationType.DONATION_APPROVED);
 
+        logService.logOperation("UPDATE", "Donation approved", user.getUsername());
         return donation;
     }
 
@@ -248,12 +248,10 @@ public class DonationService {
         }
 
         if (!checkUserPermission(userId, permission)) {
-            logService.logOperation("ERROR", "User does not have the required permission/s!", user.get().getUsername());
             throw new UserPermissionException();
         }
 
         if (!checkExistance(donatorId, campaignId)) {
-            logService.logOperation("ERROR", "Eroare din DonationException class!", user.get().getUsername());
             throw new DonationException("Problem with DonatorId or CampaignId");
         }
 
@@ -342,6 +340,8 @@ public class DonationService {
             logService.logOperation("ERROR", "User does not have the required permission/s!", user.get().getUsername());
             throw new UserPermissionException();
         }
+
+
 
         donationRepository.deleteById(donationId);
         logService.logOperation("DELETE", "Deleted donation", user.get().getUsername());
