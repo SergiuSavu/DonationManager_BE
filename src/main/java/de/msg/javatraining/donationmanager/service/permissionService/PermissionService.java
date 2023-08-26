@@ -6,6 +6,7 @@ import de.msg.javatraining.donationmanager.persistence.model.Role;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.persistence.repository.RoleRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
+import de.msg.javatraining.donationmanager.service.LogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,9 @@ public class PermissionService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private LogService logService;
 
     public List<PermissionEnum> getAllPermissions(){
         return Arrays.stream(PermissionEnum.values()).toList();
@@ -45,8 +49,10 @@ public class PermissionService {
      * list of that role, specified with roleId
      */
     public Role addPermissionToRole(Long userId, Integer roleId, PermissionEnum permissionToAdd) throws PermissionException{
-  
+
+        Optional<User> userADMIN = userRepository.findById(userId);
         if (permissionToAdd == null) {
+            logService.logOperation("ERROR",  "Permission to add cannot be null.", userADMIN.get().getUsername());
             throw new PermissionException("Permission to add cannot be null.","Permission_to_add_cannot_be_null.");
         }
 
@@ -55,8 +61,6 @@ public class PermissionService {
         //if (!permissionRepository.exists(new PermissionEnumWrapper(s))) {
         //    throw new IllegalArgumentException("Permission does not exist.");
         //}
-
-        Optional<User> userADMIN = userRepository.findById(userId);
         Optional<Role> role = roleRepository.findById(roleId);
 
         if (userADMIN.isPresent()) {
@@ -65,17 +69,21 @@ public class PermissionService {
             for (Role adminRole : userADMIN.get().getRoles()) {
                 if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
                     if (role.get().getPermissions().contains(permissionToAdd)) {
+                        logService.logOperation("ERROR", "Permission already exists.", userADMIN.get().getUsername());
                         throw new PermissionException("Permission already exists.","Permission_already_exists.");}
                     else {
                         Set<PermissionEnum> permissions = role.get().getPermissions();
                         permissions.add(permissionToAdd);
                         role.get().setPermissions(permissions);
+                        logService.logOperation("INSERT", "Added permission", userADMIN.get().getUsername());
                         return roleRepository.save(role.get());
                         //return permissionToAdd;
                     }
+
                 }
             }
         }
+        logService.logOperation("ERROR", "User not found or permission not available to edit roles.", userADMIN.get().getUsername());
         throw new PermissionException("User not found or permission not available to edit roles.", "User_not_found_or_permission_not_available_to_edit_roles.");
     }
 
@@ -93,7 +101,10 @@ public class PermissionService {
      * list of that role, specified with roleId (not available - maybe already deleted)
      */
     public Role deletePermissionFromRole(Long userId, Integer roleId, PermissionEnum permissionToDelete) throws PermissionException {
+        Optional<User> userADMIN = userRepository.findById(userId);
+
         if (permissionToDelete == null) {
+            logService.logOperation("ERROR", "Permission to delete cannot be null.", userADMIN.get().getUsername());
             throw new PermissionException("Permission to delete cannot be null.", "Permission_to_delete_cannot_be_null.");
         }
 
@@ -103,7 +114,6 @@ public class PermissionService {
         //    throw new IllegalArgumentException("Permission does not exist.");
         //}
 
-        Optional<User> userADMIN = userRepository.findById(userId);
         Optional<Role> role = roleRepository.findById(roleId);
 
         if (userADMIN.isPresent()) {
@@ -115,14 +125,17 @@ public class PermissionService {
                         Set<PermissionEnum> permissions = role.get().getPermissions();
                         permissions.remove(permissionToDelete);
                         role.get().setPermissions(permissions);
+                        logService.logOperation("DELETE", "Deleted permission", userADMIN.get().getUsername());
                         return roleRepository.save(role.get());
                         //return permissionToDelete;
                     } else {
+                        logService.logOperation("ERROR", "Permission to delete does not exist.", userADMIN.get().getUsername());
                         throw new PermissionException("Permission to delete does not exist.", "Permission_to_delete_does_not_exist.");
                     }
                 }
             }
         }
+        logService.logOperation("ERROR", "User not found or permission not available to edit roles.", userADMIN.get().getUsername());
         throw new PermissionException("User not found or permission not available to edit roles.", "User_not_found_or_permission_not_available_to_edit_roles.");
     }
 

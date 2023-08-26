@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import de.msg.javatraining.donationmanager.exceptions.permission.PermissionException;
 import de.msg.javatraining.donationmanager.persistence.model.ERole;
+import de.msg.javatraining.donationmanager.service.LogService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,6 +27,9 @@ class PermissionControllerTest {
 
     @Mock
     private PermissionService permissionService;
+
+    @Mock
+    private LogService logService;
 
     @Test
     void testAddPermissionToRole_Success() throws PermissionException {
