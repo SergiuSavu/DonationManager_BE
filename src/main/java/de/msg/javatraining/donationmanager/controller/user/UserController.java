@@ -65,16 +65,7 @@ public class UserController {
 
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateUser(@PathVariable("id") Long id, @RequestBody User newUser, HttpServletRequest request) {
-        // Extract the token from the header
-        String token = request.getHeader("Authorization"); // Assuming the header is "Bearer <token>"
-        System.out.println("token: " + token);
-
-        // Decode the JWT
-        DecodedJWT jwt = JWT.decode(token);
-
-        // Extract the username
-        String usernameFromToken = jwt.getClaim("sub").asString();
-        System.out.println("userId: " + usernameFromToken);
+        String usernameFromToken = extractUsernameFromToken(request);
 
         // Fetch the user by username
         User userFromToken = userService.findByUsername(usernameFromToken);
@@ -88,4 +79,16 @@ public class UserController {
         }
         return response;
     }
+
+    public String extractUsernameFromToken(HttpServletRequest request) {
+        // Extract the token from the header
+        String token = request.getHeader("Authorization");
+
+        // Decode the JWT
+        DecodedJWT jwt = JWT.decode(token);
+
+        // Extract the username
+        return jwt.getClaim("sub").asString();
+    }
+
 }
