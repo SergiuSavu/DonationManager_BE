@@ -7,6 +7,7 @@ import de.msg.javatraining.donationmanager.persistence.repository.RoleRepository
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
 import de.msg.javatraining.donationmanager.service.RefreshTokenService;
 import de.msg.javatraining.donationmanager.service.userDetailsService.UserDetailsImpl;
+import de.msg.javatraining.donationmanager.service.userService.UserException;
 import de.msg.javatraining.donationmanager.service.userService.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -61,7 +62,7 @@ public class AuthController {
 
 
   @PostMapping("/login")
-  public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+  public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) throws UserException {
     Authentication authentication;
     try {
     authentication = authenticationManager

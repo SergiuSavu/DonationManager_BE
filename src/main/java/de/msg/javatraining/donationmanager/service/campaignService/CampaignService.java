@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class CampaignService {
@@ -53,8 +54,8 @@ public class CampaignService {
         return false;
     }
 
-    public List<Campaign> getAllCampaigns(){
-        return campaignRepository.findAll() ;
+    public List<Campaign> getAllCampaigns() {
+        return campaignRepository.findAll();
     }
 
     public Campaign createCampaign(Long userId, String name, String purpose) throws
@@ -86,25 +87,22 @@ public class CampaignService {
                 } else {
                     Campaign campaign = new Campaign(name, purpose);
                     campaignRepository.save(campaign);
-                    logService.logOperation("INSERT","added campaign with id:"+campaign.getId(), userADMIN.get().getUsername());
+                    logService.logOperation("INSERT", "added campaign with id:" + campaign.getId(), userADMIN.get().getUsername());
                     return campaign;
                 }
             } else {
-                logService.logOperation("ERROR","User does not have the required permission", userADMIN.get().getUsername());
+                logService.logOperation("ERROR", "User does not have the required permission", userADMIN.get().getUsername());
 
                 throw new UserPermissionException();
 
             }
         } else {
-            logService.logOperation("ERROR","User not found!",null);
+            logService.logOperation("ERROR", "User not found!", null);
 
             throw new UserNotFoundException();
         }
 
     }
-
-
-
 
 
     public Campaign updateCampaign(Long userId, Long campaignId, String name, String purpose) throws
@@ -114,72 +112,70 @@ public class CampaignService {
             UserPermissionException,
             UserNotFoundException {
 
-            if (name == null || purpose == null) {
-                throw new CampaignRequirementsException();
+        if (name == null || purpose == null) {
+            throw new CampaignRequirementsException();
+        }
+
+        Optional<User> userADMIN = userRepository.findById(userId);
+
+        if (userADMIN.isPresent()) {
+            PermissionEnum adminPermissionToCheck = PermissionEnum.CAMP_MANAGEMENT;
+            boolean hasAdminPermission = false;
+
+            for (Role adminRole : userADMIN.get().getRoles()) {
+                if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
+                    hasAdminPermission = true;
+                    break;
+                }
             }
 
-            Optional<User> userADMIN = userRepository.findById(userId);
+            if (hasAdminPermission) {
+                Optional<Campaign> campaignOptional = campaignRepository.findById(campaignId);
 
-            if (userADMIN.isPresent()) {
-                PermissionEnum adminPermissionToCheck = PermissionEnum.CAMP_MANAGEMENT;
-                boolean hasAdminPermission = false;
+                if (campaignOptional.isPresent()) {
+                    Campaign campaign = campaignOptional.get();
 
-                for (Role adminRole : userADMIN.get().getRoles()) {
-                    if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
-                        hasAdminPermission = true;
-                        break;
-                    }
-                }
-
-                if (hasAdminPermission) {
-                    Optional<Campaign> campaignOptional = campaignRepository.findById(campaignId);
-
-                    if (campaignOptional.isPresent()) {
-                        Campaign campaign = campaignOptional.get();
-
-                        if (!campaign.getName().equals(name)) {
-                            // Check for uniqueness of the new name
-                            if (campaignRepository.findCampaignByName(name) != null) {
-                                throw new CampaignNameException();
-                            }
+                    if (!campaign.getName().equals(name)) {
+                        // Check for uniqueness of the new name
+                        if (campaignRepository.findCampaignByName(name) != null) {
+                            throw new CampaignNameException();
                         }
-
-                        campaign.setName(name);
-                        campaign.setPurpose(purpose);
-                        campaignRepository.save(campaign);
-                        logService.logOperation("UPDATE","updated campaign with id:"+campaign.getId(), userADMIN.get().getUsername());
-
-
-                        return campaign;
-                    } else {
-                        logService.logOperation("ERROR","Name is not unique!", userADMIN.get().getUsername());
-
-                        throw new CampaignNotFoundException();
                     }
-                } else {
-                    logService.logOperation("ERROR","User does not have the required permission", userADMIN.get().getUsername());
 
-                    throw new UserPermissionException();
+                    campaign.setName(name);
+                    campaign.setPurpose(purpose);
+                    campaignRepository.save(campaign);
+                    logService.logOperation("UPDATE", "updated campaign with id:" + campaign.getId(), userADMIN.get().getUsername());
+
+
+                    return campaign;
+                } else {
+                    logService.logOperation("ERROR", "Name is not unique!", userADMIN.get().getUsername());
+
+                    throw new CampaignNotFoundException();
                 }
             } else {
-                logService.logOperation("ERROR","User not found!",null);
+                logService.logOperation("ERROR", "User does not have the required permission", userADMIN.get().getUsername());
 
-                throw new UserNotFoundException();
+                throw new UserPermissionException();
             }
+        } else {
+            logService.logOperation("ERROR", "User not found!", null);
+
+            throw new UserNotFoundException();
+        }
 
     }
-
-
 
 
     /**
      * Deletes a campaign by its ID; if the campaign has paid donations deletion fails .
      *
-     * @param userId The ID of the user requesting the deletion.
+     * @param userId     The ID of the user requesting the deletion.
      * @param campaignId The ID of the campaign to be deleted.
      * @return The deleted campaign.
-     * @throws UserIdException If the provided user ID is null.
-     * @throws CampaignIdException If the provided campaign ID is null.
+     * @throws UserIdException         If the provided user ID is null.
+     * @throws CampaignIdException     If the provided campaign ID is null.
      * @throws UserPermissionException If the user does not have the necessary permission for deletion.
      */
     public Campaign deleteCampaignById(Long userId, Long campaignId) throws
@@ -188,31 +184,38 @@ public class CampaignService {
             CampaignNotFoundException,
             UserPermissionException {
 
-            if (userId == null) {
+        if (userId == null) {
 
-                throw new UserIdException();
-            }
+            throw new UserIdException();
+        }
 
-            if (campaignId == null) {
-                throw new CampaignIdException();
-            }
+        if (campaignId == null) {
+            throw new CampaignIdException();
+        }
 
-            if (!checkUserPermission(userId, permission)) {
+        if (!checkUserPermission(userId, permission)) {
 
-                throw new UserPermissionException();
-            }
+            throw new UserPermissionException();
+        }
 
-            Campaign campaign = campaignRepository.findById(campaignId)
+        Campaign campaign = campaignRepository.findById(campaignId)
                 .orElseThrow(CampaignNotFoundException::new);
 
-            campaignRepository.deleteById(campaignId);
-        logService.logOperation("DELETE","deleted campaign with id:"+campaignId, String.valueOf(userRepository.findById(userId)));
+        Campaign toDeleteCampaign = campaignRepository.findCampaignById(campaignId);
+        List<User> users = userRepository.findAll();
+        for (User user : users) {
+            Set<Campaign> userCampaigns = user.getCampaigns();
+            if (userCampaigns.contains(toDeleteCampaign)) {
+                userCampaigns.remove(toDeleteCampaign);
+                userRepository.save(user); // Update the user entity
+            }
+        }
+        campaignRepository.deleteById(campaignId);
+        logService.logOperation("DELETE","deleted campaign with id:"+campaignId, userRepository.findById(userId).get().getUsername());
 
         return campaign;
 
     }
-
-
 
 
 }

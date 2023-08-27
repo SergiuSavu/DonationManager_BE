@@ -7,9 +7,11 @@ import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.persistence.notificationSystem.NotificationParameter;
 import de.msg.javatraining.donationmanager.persistence.notificationSystem.NotificationType;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
+import de.msg.javatraining.donationmanager.service.LogService;
 import de.msg.javatraining.donationmanager.service.NotificationService;
 import de.msg.javatraining.donationmanager.service.emailService.EmailService;
 import de.msg.javatraining.donationmanager.service.permissionService.PermissionService;
+import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +43,12 @@ public class UserService {
     @Autowired
     PermissionService permissionService;
 
+    @Autowired
+    LogService logService;
+
+    /**
+     * @return all the users from the database
+     */
     public List<UserDTO> getAllUsers() {
         List<User> usersFromDB = userRepository.findAll();
         List<UserDTO> userDTOs = new ArrayList<>();
@@ -68,6 +76,10 @@ public class UserService {
         return userDTOs;
     }
 
+    /**
+     * @param id the id of the user that need to be activated or deactivated
+     * @throws UserException custom exception which contains the message thrown in the method
+     */
     public void toggleUserActive(Long id) throws UserException {
         if (userRepository.findById(id).isEmpty()) {
             throw new UserException("User with user id: " + id + " does not exist", "USER_ID_NOT_PRESENT");
@@ -84,7 +96,7 @@ public class UserService {
     /**
      * A function which generates a username from the first and last name of a user and generates
      * a random password which needs to be changed after the first login
-     *
+     * Also sends an email with the generated password and username creates a notification to be sent when first logging in
      * @param user user object
      * @throws UserException a custom exception which returns a message depending on the error
      */
@@ -92,11 +104,14 @@ public class UserService {
 
         if (user.getMobileNumber() != null) {
             if (!user.getMobileNumber().matches("^(?:\\+?40|0)?7\\d{8}$")) {
+                logService.logOperation("ERROR", "Mobile number invalid", user.getUsername());
                 throw new UserException("Mobile number is not valid.", "MOBILE_NUMBER_NOT_VALID");
+
             }
         }
         if (user.getEmail() != null) {
             if (!user.getEmail().matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+                logService.logOperation("ERROR", "Email invalid", user.getUsername());
                 throw new UserException("Email is not valid.", "EMAIL_NOT_VALID");
             }
         }
@@ -122,8 +137,6 @@ public class UserService {
         //passwordGeneration
         String generatedPassword = UUID.randomUUID().toString();
 
-        //TODO: De decomentat pentru demo
-
         EmailRequest emailRequest = new EmailRequest();
         emailRequest.setDestination(user.getEmail());
         emailRequest.setSubject("User account created");
@@ -136,6 +149,7 @@ public class UserService {
         );
         emailService.sendSimpleMessage(emailRequest);
         user.setPassword(passwordEncoder.encode(generatedPassword));
+        logService.logOperation("INSERT", "New user created", user.getUsername());
         userRepository.save(user);
 
         List<NotificationParameter> parameters = new ArrayList<>(Arrays.asList(
@@ -148,20 +162,24 @@ public class UserService {
         notificationService.saveNotification(user, parameters, NotificationType.WELCOME_NEW_USER);
     }
 
-    public void resetRetryCount(String username) {
+    public void resetRetryCount(String username) throws UserException {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalStateException(
-                        "User with username: " + username + " does not exist."
+                .orElseThrow(() -> new UserException(
+                        "User with username: " + username + " does not exist.", "USER_ID_NOT_PRESENT"
                 ));
         user.setRetryCount(0);
 
         userRepository.save(user);
     }
 
+    /**
+     * Increments the retry count by one with every call until it reaches 5 tries, after which sets the user to deactivated
+     * @param username the username which is used to find the user that needs to be modified
+     */
     public void updateRetryCount(String username) {
         try {
             if (userRepository.findByUsername(username).isEmpty()) {
-                throw new IllegalStateException("User with username: " + username + " does not exist.");
+                throw new UserException("User with username: " + username + " does not exist.", "USER_DOES_NOT_EXIST");
             }
             User user = userRepository.findByUsername(username).get();
 
@@ -188,9 +206,8 @@ public class UserService {
 
 
             }
-            //TODO: inca mai sunt erori prost tratate
             userRepository.save(user);
-        } catch (IllegalStateException e) {
+        } catch (UserException e) {
             new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
             return;
         }
@@ -199,6 +216,12 @@ public class UserService {
     }
 
 
+    /**
+     * @param userFromToken the user which made the change
+     * @param id the id of the user that is modified
+     * @param newUser the updated user which fields will be used to change the existing user
+     * @throws UserException a custom exception which returns a message depending on the error
+     */
     public void updateUser(User userFromToken, Long id, User newUser) throws UserException {
         boolean onlyActiveNotNull = true;
         if (userRepository.findById(id).isEmpty()) {
@@ -327,10 +350,18 @@ public class UserService {
         return userDTO;
     }
 
+    /**
+     * @param username the username of the user which is searched for
+     * @return a boolean confirming or denying the presence of the searched user
+     */
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }
 
+    /**
+     * @param username the username of the user which is searched for
+     * @return a user
+     */
     public User findByUsername(String username) {
         return userRepository.findByUsername(username).orElse(null);
     }
