@@ -94,7 +94,7 @@ public class PermissionService {
      * @author Gal Timea
      * @param userId id of the user who is logged in
      * @param roleId id of the role
-     * @param permissionToAdd new permission to delete from that role, specified with the roleId
+     * @param permissionToDelete new permission to delete from that role, specified with the roleId
      * @return new modified Role which now does not have the permission
      * @throws PermissionException depending on the case: the new permission is null,
      * the user does not have the specific permission to edit roles or the permission is not available in the permission
