@@ -16,6 +16,7 @@ import de.msg.javatraining.donationmanager.exceptions.user.UserNotFoundException
 import de.msg.javatraining.donationmanager.exceptions.user.UserPermissionException;
 import de.msg.javatraining.donationmanager.persistence.repository.CampaignRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
+import de.msg.javatraining.donationmanager.service.LogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,9 @@ public class CampaignService {
 
     @Autowired
     private CampaignRepository campaignRepository;
+
+    @Autowired
+    private LogService logService;
 
 
     private final PermissionEnum permission = PermissionEnum.CAMP_MANAGEMENT;
@@ -82,12 +86,18 @@ public class CampaignService {
                 } else {
                     Campaign campaign = new Campaign(name, purpose);
                     campaignRepository.save(campaign);
+                    logService.logOperation("INSERT","added campaign with id:"+campaign.getId(), userADMIN.get().getUsername());
                     return campaign;
                 }
             } else {
+                logService.logOperation("ERROR","User does not have the required permission", userADMIN.get().getUsername());
+
                 throw new UserPermissionException();
+
             }
         } else {
+            logService.logOperation("ERROR","User not found!",null);
+
             throw new UserNotFoundException();
         }
 
@@ -95,30 +105,7 @@ public class CampaignService {
 
 
 
-//    public Campaign createCampaign(Long userId, String name, String purpose){
-//        if (name == null || purpose == null)
-//            throw new IllegalArgumentException("Name or purpose cannot be null");
-//
-//        Optional<User> userADMIN = userRepository.findById(userId);
-//
-//        if(userADMIN.isPresent()) {
-//            PermissionEnum adminPermissionToCheck = PermissionEnum.CAMP_MANAGEMENT;
-//            for (Role adminRole : userADMIN.get().getRoles()) {
-//                if (adminRole.getPermissions().contains(adminPermissionToCheck)){
-//                    if(campaignRepository.findCampaignByName(name)!=null ){
-//                         throw new IllegalArgumentException("Not a unique name");
-//                    }
-//                    else {
-//                        Campaign campaign = new Campaign(name, purpose);
-//                        campaignRepository.save(campaign);
-//                        return campaign;
-//                    }
-//                }
-//                else throw new IllegalArgumentException("No permission to create a new campaign. ");
-//        }
-//    }
-//        throw new IllegalArgumentException("User not found.");
-//    }
+
 
     public Campaign updateCampaign(Long userId, Long campaignId, String name, String purpose) throws
             CampaignRequirementsException,
@@ -160,56 +147,41 @@ public class CampaignService {
                         campaign.setName(name);
                         campaign.setPurpose(purpose);
                         campaignRepository.save(campaign);
+                        logService.logOperation("UPDATE","updated campaign with id:"+campaign.getId(), userADMIN.get().getUsername());
+
 
                         return campaign;
                     } else {
+                        logService.logOperation("ERROR","Name is not unique!", userADMIN.get().getUsername());
+
                         throw new CampaignNotFoundException();
                     }
                 } else {
+                    logService.logOperation("ERROR","User does not have the required permission", userADMIN.get().getUsername());
+
                     throw new UserPermissionException();
                 }
             } else {
+                logService.logOperation("ERROR","User not found!",null);
+
                 throw new UserNotFoundException();
             }
 
     }
 
 
-//    public Campaign updateCampaign(Long userId, Long campaignId, String name, String purpose) {
-//        // Campaign campaign1 = findById(id).orElseThrow(() -> new IllegalStateException(
-//        //        "User with id: " + id + " does not exist"
-//        // ));
-//
-//        if (name == null || purpose == null)
-//            throw new IllegalArgumentException("Name or purpose cannot be null");
-//
-//        if(campaignRepository.findCampaignByName(name) != null){
-//            throw new IllegalArgumentException("Not a unique name");
-//        }
-//        Optional<User> userADMIN = userRepository.findById(userId);
-//
-//        if (userADMIN.isPresent()) {
-//            PermissionEnum adminPermissionToCheck = PermissionEnum.CAMP_MANAGEMENT;
-//            for (Role adminRole : userADMIN.get().getRoles()) {
-//                if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
-//                    Optional<Campaign> campaign = campaignRepository.findById(campaignId);
-//                    if(campaign.isPresent()){
-//                        campaign.get().setName(name);
-//                        campaign.get().setPurpose(purpose);
-//                        campaignRepository.save(campaign.get());
-//                        return campaign.get();
-//                    }
-//                    else throw new IllegalArgumentException("Campaign not found.");
-//
-//                }
-//                else throw new IllegalArgumentException("No permission to modify a  campaign. ");
-//
-//            }
-//        }
-//        throw new IllegalArgumentException("User not found1.");
-//    }
 
 
+    /**
+     * Deletes a campaign by its ID; if the campaign has paid donations deletion fails .
+     *
+     * @param userId The ID of the user requesting the deletion.
+     * @param campaignId The ID of the campaign to be deleted.
+     * @return The deleted campaign.
+     * @throws UserIdException If the provided user ID is null.
+     * @throws CampaignIdException If the provided campaign ID is null.
+     * @throws UserPermissionException If the user does not have the necessary permission for deletion.
+     */
     public Campaign deleteCampaignById(Long userId, Long campaignId) throws
             UserIdException,
             CampaignIdException,
@@ -217,6 +189,7 @@ public class CampaignService {
             UserPermissionException {
 
             if (userId == null) {
+
                 throw new UserIdException();
             }
 
@@ -225,6 +198,7 @@ public class CampaignService {
             }
 
             if (!checkUserPermission(userId, permission)) {
+
                 throw new UserPermissionException();
             }
 
@@ -232,53 +206,13 @@ public class CampaignService {
                 .orElseThrow(CampaignNotFoundException::new);
 
             campaignRepository.deleteById(campaignId);
-            return campaign;
+        logService.logOperation("DELETE","deleted campaign with id:"+campaignId, String.valueOf(userRepository.findById(userId)));
 
-//            Optional<User> userADMIN = userRepository.findById(userId);
-//            if (userADMIN.isPresent()) {
-//                PermissionEnum adminPermissionToCheck = PermissionEnum.CAMP_MANAGEMENT;
-//                for (Role adminRole : userADMIN.get().getRoles()) {
-//                    if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
-//                        Optional<Campaign> campaign = campaignRepository.findById(campaignId);
-//                        if(campaign.isPresent()){
-//                            campaignRepository.deleteById(campaignId);
-//                            return campaign;
-//                        }
-//                        else
-//                            throw new CampaignNotFoundException();
-//                    }
-//                    else
-//                        throw new UserPermissionException();
-//                }
-//            }
-//            throw new UserNotFoundException();
+        return campaign;
 
     }
 
 
-//    public Campaign deleteCampaignById(Long userId, Long campaignId){
-//        if(userId == null || campaignId == null){
-//            throw new IllegalArgumentException("User ID or campaign ID cannot be null.");
-//        }
-//
-//        Optional<User> userADMIN = userRepository.findById(userId);
-//        if (userADMIN.isPresent()) {
-//            PermissionEnum adminPermissionToCheck = PermissionEnum.CAMP_MANAGEMENT;
-//            for (Role adminRole : userADMIN.get().getRoles()) {
-//                if (adminRole.getPermissions().contains(adminPermissionToCheck)) {
-//                    Optional<Campaign> campaign = campaignRepository.findById(campaignId);
-//                    if(campaign.isPresent()){
-//                        campaignRepository.deleteById(campaignId);
-//                        return campaign.get();
-//                    }
-//                    else throw new IllegalArgumentException("Campaign not found.");
-//                }
-//                else throw new IllegalArgumentException("No permission to delete a campaign. ");
-//
-//            }
-//        }
-//        throw new IllegalArgumentException("User not found.");
-//    }
 
 
 }
