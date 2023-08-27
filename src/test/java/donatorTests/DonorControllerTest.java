@@ -1,6 +1,9 @@
 package donatorTests;
 
 import de.msg.javatraining.donationmanager.controller.donor.DonorController;
+import de.msg.javatraining.donationmanager.exceptions.donation.DonationIdException;
+import de.msg.javatraining.donationmanager.exceptions.donation.DonationNotFoundException;
+import de.msg.javatraining.donationmanager.exceptions.donation.DonationRequirementsException;
 import de.msg.javatraining.donationmanager.exceptions.donator.DonatorIdException;
 import de.msg.javatraining.donationmanager.exceptions.donator.DonatorNotFoundException;
 import de.msg.javatraining.donationmanager.exceptions.donator.DonatorRequirementsException;
@@ -117,119 +120,53 @@ public class DonorControllerTest {
         assertEquals(result.getLastName(), donor.getLastName());
         assertEquals(result.getAdditionalName(), donor.getAdditionalName());
         assertEquals(result.getMaidenName(), donor.getMaidenName());
+
     }
 
-//    @Test
-//    public void testGetDonator_Success() throws DonatorNotFoundException {
-//        // Create a sample Donator object
-//        Donator donator = createGoodDonator(1L);
-//
-//        // Mock the behavior of donatorService.getDonatorById to return null (or any value since we're creating the ResponseEntity ourselves)
-//        // when(donatorService.getDonatorById(1L)).thenReturn(new ResponseEntity<>(HttpStatus.OK)); -- nu da eroare, da nu cred ca este bine
-//
-//        when(donatorService.getDonatorById(1L)).thenReturn(donator);
-//
-//        // Create a ResponseEntity with your Donator
-//        ResponseEntity<?> responseEntity = donatorController.getDonator(1L);
-//
-//        // Assert that the response is as expected
-////        assertEquals(responseEntity.getStatusCode(), result.getStatusCode());
-////        assertEquals(responseEntity.getBody(), result.getBody());
-//
-//        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-//        assertEquals(donator, responseEntity.getBody());
-//    }
-
-
-//    @Test
-//    public void testCreateDonator() throws UserPermissionException, DonatorRequirementsException {
-//        Donator donator = createGoodDonator(1L);
-//        Donator badDonator = new Donator();
-//        User goodUser = goodUser(1L);
-//        User badUser = badUser(2L);
-//
-//        when(donatorService.createDonator(eq(goodUser.getId()), any(Donator.class))).thenReturn(donator);
-//        when(donatorService.createDonator(eq(badUser.getId()), any(Donator.class))).thenReturn(null);
-//        when(donatorService.createDonator(goodUser.getId(), badDonator)).thenReturn(null);
-//
-//        ResponseEntity<?> goodResponse = donatorController.createDonator(goodUser.getId(), donator);
-//        assertEquals("Donator created successfully!", goodResponse.getBody());
-//
-//        // user with no permission
-//        ResponseEntity<?> permissionResponse = donatorController.createDonator(badUser.getId(), donator);
-//        assertEquals("Donator has not been created!", permissionResponse.getBody());
-//
-//        // user with no permission
-//        ResponseEntity<?> requirementsResponse = donatorController.createDonator(goodUser.getId(), badDonator);
-//        assertEquals("Donator has not been created!", requirementsResponse.getBody());
-//    }
-@Test
-public void testCreateDonator_Success() throws UserPermissionException, DonatorRequirementsException {
-    Donor donor = createGoodDonator(1L);
-    User goodUser = goodUser(1L);
-
-    when(donorService.createDonator(eq(goodUser.getId()), any(Donor.class))).thenReturn(donor);
-
-    ResponseEntity<?> response = donorController.createDonator(goodUser.getId(), donor);
-
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals("Donator created successfully!", response.getBody());
-}
 
     @Test
-    public void testCreateDonator_NoPermission() throws UserPermissionException, DonatorRequirementsException {
-        Donor donor = createGoodDonator(1L);
+    public void testCreateDonator() throws UserPermissionException, DonatorRequirementsException {
+        Donor donator = createGoodDonator(1L);
+        Donor badDonator = new Donor();
+        User goodUser = goodUser(1L);
         User badUser = badUser(2L);
 
-        when(donorService.createDonator(badUser.getId(), donor)).thenThrow(new UserPermissionException());
+        // success
+        when(donorService.createDonator(goodUser.getId(), donator)).thenReturn(donator);
 
-        ResponseEntity<?> response = donorController.createDonator(badUser.getId(), donor);
+        // no permission
+        when(donorService.createDonator(badUser.getId(), donator)).thenThrow(new UserPermissionException());
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode()); // Use a proper HTTP status code for errors
-        assertTrue(response.getBody() instanceof Map); // Check that the response body is a JSON object
+        // donator req
+        when(donorService.createDonator(goodUser.getId(), badDonator)).thenThrow(new DonatorRequirementsException());
 
-        // You can then extract the error message from the JSON and check it
-        Map<String, String> responseBody = (Map<String, String>) response.getBody();
-        assertTrue(responseBody.containsKey("error"));
-        assertEquals("User does not have permission", responseBody.get("error"));
+        ResponseEntity<?> goodResponse = donorController.createDonator(goodUser.getId(), donator);
+        assertNotNull(goodResponse);
+        assertEquals(HttpStatus.OK, goodResponse.getStatusCode());
+        assertEquals(donator, goodResponse.getBody());
+
+        // user with no permission
+        ResponseEntity<?> permissionResponse = donorController.createDonator(badUser.getId(), donator);
+        assertNotNull(permissionResponse);
+        assertEquals(HttpStatus.OK, permissionResponse.getStatusCode());
+        assertTrue(permissionResponse.getBody() instanceof UserPermissionException);
+
+        // donator requirements not met
+        ResponseEntity<?> requirementsResponse = donorController.createDonator(goodUser.getId(), badDonator);
+        assertNotNull(requirementsResponse);
+        assertEquals(HttpStatus.OK, requirementsResponse.getStatusCode());
+        assertTrue(requirementsResponse.getBody() instanceof DonatorRequirementsException);
+
     }
 
-
-//    @Test
-//    public void testCreateDonator_NoPermission() throws UserPermissionException, DonatorRequirementsException {
-//        Donator donator = createGoodDonator(1L);
-//        User badUser = badUser(2L);
-//
-//        //when(donatorService.createDonator(eq(badUser.getId()), any(Donator.class))).thenReturn(null);
-//        when(donatorService.createDonator(badUser.getId(), donator)).thenThrow(new UserPermissionException());
-//
-//        assertThrows(UserPermissionException.class, () -> {
-//            donatorService.createDonator(badUser.getId(), donator);
-//        });
-//
-//        ResponseEntity<?> response = donatorController.createDonator(badUser.getId(), donator);
-//
-//        assertEquals(HttpStatus.OK, response.getStatusCode());
-//        //assertEquals("Donator has not been created!", response.getBody());
-//        assertEquals(new UserPermissionException(), response.getBody());
-//    }
-
     @Test
-    public void testCreateDonator_RequirementsNotMet() throws UserPermissionException, DonatorRequirementsException {
-        Donor badDonor = new Donor();
-        User goodUser = goodUser(1L);
+    public void testUpdateDonator() throws
+            DonatorIdException,
+            UserPermissionException,
+            DonatorRequirementsException,
+            DonatorNotFoundException {
 
-        when(donorService.createDonator(goodUser.getId(), badDonor)).thenReturn(null);
-
-        ResponseEntity<?> response = donorController.createDonator(goodUser.getId(), badDonor);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Donator has not been created!", response.getBody());
-    }
-
-
-    @Test
-    public void testUpdateDonator() throws DonatorIdException, UserPermissionException, DonatorRequirementsException, DonatorNotFoundException {
+        Long invalidId = 25L;
         Donor donor = createGoodDonator(1L);
         Donor badDonor = createBadDonator();
         Donor updatedDonor = new Donor("ugfn1", "ugln1", "ugadn1", "ugmdn1");
@@ -237,57 +174,109 @@ public void testCreateDonator_Success() throws UserPermissionException, DonatorR
         User goodUser = goodUser(1L);
         User badUser = badUser(2L);
 
-        when(donorService.updateDonator(eq(goodUser.getId()), eq(donor.getId()), any(Donor.class))).thenReturn(donor);
 
-        ResponseEntity<?> goodResponse = donorController.updateDonator(goodUser.getId(), donor.getId(), updatedDonor);
-        assertNotNull(goodResponse);
-        assertEquals("Donator updated successfully!", goodResponse.getBody());
+        // Mock services
 
-        // user with no permission
-        ResponseEntity<?> permissionResponse = donorController.updateDonator(badUser.getId(), donor.getId(), updatedDonor);
-        assertEquals("Donator has not been updated!", permissionResponse.getBody());
+        when(donorService.updateDonator(goodUser.getId(), donor.getId(), updatedDonor)).
+                thenReturn(donor);
 
-        // donator id
-        ResponseEntity<?> idResponse = donorController.updateDonator(goodUser.getId(), badDonor.getId(), updatedDonor);
-        assertEquals("Donator has not been updated!", idResponse.getBody());
+        when(donorService.updateDonator(badUser.getId(), donor.getId(), updatedDonor)).
+                thenThrow(new UserPermissionException());
 
-        // donator requirements
-        ResponseEntity<?> requirementsResponse = donorController.updateDonator(goodUser.getId(), badUpdatedDonor.getId(), badUpdatedDonor);
-        assertEquals("Donator has not been updated!", requirementsResponse.getBody());
+        when (donorService.updateDonator(goodUser.getId(), donor.getId(), badUpdatedDonor)).
+                thenThrow(new DonatorRequirementsException());
 
-        // donator not found
-        ResponseEntity<?> foundResponse = donorController.updateDonator(goodUser.getId(), 250L, updatedDonor);
-        assertEquals("Donator has not been updated!", foundResponse.getBody());
+        when(donorService.updateDonator(goodUser.getId(), invalidId, updatedDonor)).
+                thenThrow(new DonatorNotFoundException());
+
+        when(donorService.updateDonator(goodUser.getId(), badDonor.getId(), updatedDonor)).
+                thenThrow(new DonatorIdException());
+
+        // Success
+        // Call the controller method & verify the response
+        ResponseEntity<?> responseEntity = donorController.updateDonator(goodUser.getId(), donor.getId(), updatedDonor);
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(donor, responseEntity.getBody());
+
+        // User exception
+        // Call the controller method & verify the response
+        ResponseEntity<?> userEntity = donorController.updateDonator(badUser.getId(), donor.getId(), updatedDonor);
+        assertNotNull(userEntity);
+        assertEquals(HttpStatus.OK, userEntity.getStatusCode());
+        assertTrue(userEntity.getBody() instanceof UserPermissionException);
+
+        // DonatorId exception
+        // Call the controller method & verify the response
+        ResponseEntity<?> didEntity = donorController.updateDonator(goodUser.getId(), badDonor.getId(), updatedDonor);
+        assertNotNull(didEntity);
+        assertEquals(HttpStatus.OK, didEntity.getStatusCode());
+        assertTrue(didEntity.getBody() instanceof DonatorIdException);
+
+        // DonatorReq exception
+        // Call the controller method & verify the response
+        ResponseEntity<?> reqEntity = donorController.updateDonator(goodUser.getId(), donor.getId(), badUpdatedDonor);
+        assertNotNull(reqEntity);
+        assertEquals(HttpStatus.OK, reqEntity.getStatusCode());
+        assertTrue(reqEntity.getBody() instanceof DonatorRequirementsException);
+
+        // Donor not found
+        // Call the controller method & verify the response
+        ResponseEntity<?> notFoundEntity = donorController.updateDonator(goodUser.getId(), invalidId, updatedDonor);
+        assertNotNull(notFoundEntity);
+        assertEquals(HttpStatus.OK, notFoundEntity.getStatusCode());
+        assertTrue(notFoundEntity.getBody() instanceof DonatorNotFoundException);
     }
 
     @Test
-    public void testDeleteDonatorById() throws DonatorIdException, UserPermissionException, DonatorNotFoundException {
-        Long userId = 1L;
-        Long donatorId = 1L;
-        Long badId = 25L;
-        Donor testDonor = createGoodDonator(donatorId);
+    public void testDeleteDonatorById() throws
+            DonatorIdException,
+            UserPermissionException,
+            DonatorNotFoundException {
+
+        Long invalidId = 25L;
+        User goodUser = goodUser(1L);
+        User badUser = badUser(2L);
+        Donor testDonor = createGoodDonator(1L);
+
         Donor noDonationsDonor = createGoodDonator(2L);
+        Donor unknowDonor = new Donor("UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN");
+        unknowDonor.setId(3L);
 
         // Mock the behavior of the service methods
-        when(donorService.deleteDonatorById(eq(userId), eq(donatorId))).thenReturn(testDonor);
-        when(donorService.deleteDonatorById(eq(userId), eq(noDonationsDonor.getId()))).thenReturn(noDonationsDonor);
-        when(donorService.deleteDonatorById(eq(userId), eq(badId))).thenReturn(null);
-        when(donationService.findDonationsByDonatorId(eq(donatorId))).thenReturn(true);
-        when(donationService.findDonationsByDonatorId(eq(noDonationsDonor.getId()))).thenReturn(false);
+        when(donorService.deleteDonatorById(goodUser.getId(), testDonor.getId())).thenReturn(testDonor);
+        when(donorService.deleteDonatorById(goodUser.getId(), noDonationsDonor.getId())).thenReturn(noDonationsDonor);
+        when(donorService.deleteDonatorById(goodUser.getId(), null)).thenThrow(new DonatorIdException());
+        when(donorService.deleteDonatorById(badUser.getId(), testDonor.getId())).thenThrow(new UserPermissionException());
+        when(donorService.deleteDonatorById(goodUser.getId(), invalidId)).thenThrow(new DonatorNotFoundException());
 
-        // Call the controller method
-        ResponseEntity<?> response = donorController.deleteDonatorById(userId, donatorId);
+        ResponseEntity<?> goodResponse = donorController.deleteDonatorById(goodUser.getId(), testDonor.getId());
+        assertEquals(goodResponse.getBody(), testDonor);
 
-        // Assertions
-        assertNotNull(response);
-        assertEquals("Donator values have been set to UNKNOWN!", response.getBody());
+        ResponseEntity<?> goodResponse2 = donorController.deleteDonatorById(goodUser.getId(), noDonationsDonor.getId());
+        assertEquals(goodResponse2.getBody(), noDonationsDonor);
 
-        response = donorController.deleteDonatorById(userId, noDonationsDonor.getId());
-        assertNotNull(response);
-        assertEquals("Donator values have been deleted!", response.getBody());
+        // User exception
+        // Call the controller method & verify the response
+        ResponseEntity<?> userEntity = donorController.deleteDonatorById(badUser.getId(), testDonor.getId());
+        assertNotNull(userEntity);
+        assertEquals(HttpStatus.OK, userEntity.getStatusCode());
+        assertTrue(userEntity.getBody() instanceof UserPermissionException);
 
-        response = donorController.deleteDonatorById(userId, 25L);
-        assertEquals("Donator with given id does not exist!", response.getBody());
+        // DonorId exception
+        // Call the controller method & verify the response
+        ResponseEntity<?> didEntity = donorController.deleteDonatorById(goodUser.getId(), null);
+        assertNotNull(didEntity);
+        assertEquals(HttpStatus.OK, didEntity.getStatusCode());
+        assertTrue(didEntity.getBody() instanceof DonatorIdException);
+
+        // Donor not found
+        // Call the controller method & verify the response
+        ResponseEntity<?> notFoundEntity = donorController.deleteDonatorById(goodUser.getId(), invalidId);
+        assertNotNull(notFoundEntity);
+        assertEquals(HttpStatus.OK, notFoundEntity.getStatusCode());
+        assertTrue(notFoundEntity.getBody() instanceof DonatorNotFoundException);
+
     }
 
 }

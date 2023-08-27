@@ -4,6 +4,7 @@ import de.msg.javatraining.donationmanager.exceptions.donator.DonatorIdException
 import de.msg.javatraining.donationmanager.exceptions.donator.DonatorNotFoundException;
 import de.msg.javatraining.donationmanager.exceptions.donator.DonatorRequirementsException;
 import de.msg.javatraining.donationmanager.exceptions.user.UserPermissionException;
+import de.msg.javatraining.donationmanager.persistence.donationModel.Donation;
 import de.msg.javatraining.donationmanager.persistence.donorModel.Donor;
 import de.msg.javatraining.donationmanager.persistence.model.ERole;
 import de.msg.javatraining.donationmanager.persistence.model.PermissionEnum;
@@ -11,6 +12,7 @@ import de.msg.javatraining.donationmanager.persistence.model.Role;
 import de.msg.javatraining.donationmanager.persistence.model.user.User;
 import de.msg.javatraining.donationmanager.persistence.repository.DonorRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
+import de.msg.javatraining.donationmanager.service.LogService;
 import de.msg.javatraining.donationmanager.service.donorService.DonorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,12 +23,16 @@ import org.mockito.MockitoAnnotations;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 //
 public class DonorServiceTest {
 
     @InjectMocks
     private DonorService donorService;
+
+    @Mock
+    private LogService logService;
 
     @Mock
     private DonorRepository donorRepository;
@@ -137,7 +143,11 @@ public class DonorServiceTest {
     }
 
     @Test
-    public void testDeleteDonatorById() {
+    public void testDeleteDonatorById() throws
+            DonatorIdException,
+            UserPermissionException,
+            DonatorNotFoundException {
+
         Donor donor = makeDonator(1L);
         Donor don = makeDonator(null);
         User goodUser = goodUser(1L);
@@ -145,9 +155,13 @@ public class DonorServiceTest {
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(goodUser));
         when(userRepository.findById(2L)).thenReturn(Optional.of(badUser));
+        when(donorRepository.findById(1L)).thenReturn(Optional.of(donor));
         when(donorRepository.deleteDonatorById(1L)).thenReturn(Optional.of(donor));
 
         assertEquals(donorRepository.deleteDonatorById(1L), Optional.of(donor));
+
+        Donor deletedDonor = donorService.deleteDonatorById(goodUser.getId(), donor.getId());
+        verify(donorRepository).deleteById(1L);
 
         assertThrows(DonatorNotFoundException.class, () -> {
             donorService.deleteDonatorById(goodUser.getId(), 25L);
@@ -157,7 +171,7 @@ public class DonorServiceTest {
             donorService.deleteDonatorById(goodUser.getId(), don.getId());
         });
 
-        assertThrows(DonatorNotFoundException.class, () -> {
+        assertThrows(UserPermissionException.class, () -> {
             donorService.deleteDonatorById(badUser.getId(), donor.getId());
         });
     }
@@ -168,6 +182,7 @@ public class DonorServiceTest {
             UserPermissionException,
             DonatorRequirementsException,
             DonatorNotFoundException {
+
         Donor donor = makeDonator(1L);
         Donor updon = new Donor("upfn", "upln", "upadnm", "upmdn");
         updon.setId(1L);
