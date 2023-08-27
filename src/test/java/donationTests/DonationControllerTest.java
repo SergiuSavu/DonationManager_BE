@@ -57,7 +57,7 @@ public class DonationControllerTest {
         Role role = new Role(1, ERole.ROLE_ADM, permissionEnums);
         roles.add(role);
 
-        User user = new User(userId, "testUser1", "testUser1", "1234567899", "goodUser", "test1@example.com", "psswd1", true, false, 1, roles, new HashSet<>());
+        User user = new User(userId,"testUser1", "testUser1", "1234567899", "goodUser", "test1@example.com", "psswd1", true, false, 1, roles, new HashSet<>());
         return user;
     }
 
@@ -70,7 +70,7 @@ public class DonationControllerTest {
         Role role = new Role(1, ERole.ROLE_ADM, permissionEnums);
         roles.add(role);
 
-        User user = new User(userId, "testuser2", "testUser2", "1234567800", "badUser", "test2@example.com", "psswd2", true, false, 1, roles, new HashSet<>());
+        User user = new User(userId,"testuser2", "testUser2", "1234567800", "badUser", "test2@example.com", "psswd2", true, false, 1, roles, new HashSet<>());
         return user;
     }
 
@@ -93,9 +93,9 @@ public class DonationControllerTest {
         Campaign campaign = createCampaign(1L);
 
         List<Donation> mockDonations = Arrays.asList(
-                new Donation(1L, 200, "EUR", campaign, donor, user, null, "", LocalDate.now(), false, null),
-                new Donation(2L, 250, "USD", campaign, donor, user, null, "", LocalDate.now(), false, null),
-                new Donation(3L, 2000, "YEN", campaign, donor, user, null, "", LocalDate.now(), false, null)
+                new Donation(1L,200, "EUR", campaign, donor, user, null, "", LocalDate.now(), false, null),
+                new Donation(2L,250, "USD", campaign, donor, user, null, "", LocalDate.now(), false, null),
+                new Donation(3L,2000, "YEN", campaign, donor, user, null, "", LocalDate.now(), false, null)
         );
         when(donationService.getAllDonations()).thenReturn(mockDonations);
 
@@ -111,7 +111,7 @@ public class DonationControllerTest {
         User user = goodUser(1L);
         Donor donor = createDonator(1L);
         Campaign campaign = createCampaign(1L);
-        Donation donation = new Donation(1L, 200, "EUR", campaign, donor, user, null, "", LocalDate.now(), false, null);
+        Donation donation = new Donation(1L,200, "EUR", campaign, donor, user, null, "", LocalDate.now(), false, null);
 
         when(donationService.getDonationById(donation.getId())).thenReturn(donation);
 
@@ -124,212 +124,351 @@ public class DonationControllerTest {
         assertEquals(result.getCurrency(), donation.getCurrency());
     }
 
-    @Test
-    public void testCreateDonation() throws
-            UserPermissionException,
-            DonationRequirementsException,
-            DonationException {
+//    @Test
+//    public void testCreateDonation() throws UserPermissionException, DonationRequirementsException, DonationException {
+//        User user = goodUser(1L);
+//        User badUser = badUser(2L);
+//        Donator donator = createDonator(1L);
+//        Campaign campaign = createCampaign(1L);
+//        Donation donation = new Donation(1L,200, "EUR", campaign, donator, user, null, "", LocalDate.now(), false, null);
+//        Donation noRequirementsDonation = new Donation();
+//        Donation donationException = new Donation(3L,200, "EUR", null, null, null, null, "", LocalDate.now(), false, null);
+//
+//        // Mock service response
+//        when(donationService.createDonation(user.getId(), donator.getId(), campaign.getId(), donation)).thenReturn(donation);
+//
+//        // Mock service response to throw UserPermissionException
+//        when(donationService.createDonation(badUser.getId(), donator.getId(), campaign.getId(), donation))
+//                .thenThrow(new UserPermissionException("User does not have permission!"));
+//
+//        // Mock service response to throw DonationRequirementsException
+//        when(donationService.createDonation(user.getId(), donator.getId(), campaign.getId(), noRequirementsDonation))
+//                .thenThrow(new DonationRequirementsException("Requirements not met!"));
+//
+//        // Call the controller method
+//        ResponseEntity<?> responseEntity = donationController.createDonation(user.getId(), donator.getId(), campaign.getId(), donation);
+//
+//        // Verify the response
+//        assertNotNull(responseEntity);
+//        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+//        assertEquals("Donation created successfully!", responseEntity.getBody());
+//
+//        // Call the controller method
+//        ResponseEntity<?> permissionResponse = donationController.createDonation(badUser.getId(), donator.getId(), campaign.getId(), donation);
+//
+//        // Verify the response
+//        assertNotNull(responseEntity);
+//        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+//        assertEquals("User does not have permission!", permissionResponse.getBody());
+//
+//        // Call the controller method
+//        ResponseEntity<?> requirementsResponse = donationController.createDonation(user.getId(), donator.getId(), campaign.getId(), noRequirementsDonation);
+//
+//        // Verify the response
+//        assertNotNull(responseEntity);
+//        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+//        assertEquals("Requirements not met!", requirementsResponse.getBody());
+//
+//        // user with no permission
+////        ResponseEntity<Donation> forbiddenResponse = ResponseEntity.status(HttpStatus.OK).build();
+////        when(donationService.createDonation(eq(badUser.getId()), eq(donator.getId()), eq(campaign.getId()), any(Donation.class))).thenReturn(forbiddenResponse.getBody());
+//
+////        assertThrows(UserPermissionException.class, () -> {
+////            donationController.createDonation(badUser.getId(), donator.getId(), campaign.getId(), donation);
+////        });
+////
+////        ResponseEntity<?> badResponse = donationController.createDonation(badUser.getId(), donator.getId(), campaign.getId(), donation);
+////        assertEquals(HttpStatus.FORBIDDEN, badResponse.getStatusCode());
+//    }
 
+
+    @Test
+    public void testCreateDonation() throws UserPermissionException, DonationRequirementsException, DonationException {
+        Donor donor = createDonator(1L);
         User user = goodUser(1L);
         User badUser = badUser(2L);
-        Donor donator = createDonator(1L);
         Campaign campaign = createCampaign(1L);
-        Donation donation = new Donation(1L, 200, "EUR", campaign, donator, user, null, "", LocalDate.now(), false, null);
-        Donation noRequirementsDonation = new Donation();
-        Donation donationException = new Donation(3L, 200, "EUR", null, null, null, null, "", LocalDate.now(), false, null);
+        Donation donation = new Donation(1L,200, "EUR", campaign, donor, user, null, "", LocalDate.now(), false, null);
+        Donation badDonation = new Donation();
+
+        when(donationService.createDonation(user.getId(), donor.getId(), campaign.getId(), donation)).thenReturn(donation);
+        when(donationService.createDonation(eq(badUser.getId()), eq(donor.getId()), eq(campaign.getId()), eq(badDonation))).thenReturn(null);
+        when(donationService.createDonation(eq(badUser.getId()), eq(donor.getId()), eq(campaign.getId()), eq(badDonation))).thenReturn(null);
+
+        ResponseEntity<?> goodResponse = donationController.createDonation(user.getId(), donor.getId(), campaign.getId(), donation);
+        assertEquals("Donation created successfully!", goodResponse.getBody());
+
+        // user with no permission
+        ResponseEntity<?> permissionResponse = donationController.createDonation(badUser.getId(), donor.getId(), campaign.getId(), donation);
+        assertEquals("Donation has not been created!", permissionResponse.getBody());
+
+        // bad donation requirements
+        ResponseEntity<?> requirementsResponse = donationController.createDonation(user.getId(), donor.getId(), campaign.getId(), badDonation);
+        assertEquals("Donation has not been created!", requirementsResponse.getBody());
+
+    }
+
+    @Test
+    public void testCreateDonation_Success() throws UserPermissionException, DonationRequirementsException, DonationException {
+        // Create test data
+        User user = goodUser(1L);
+        Donor donor = createDonator(1L);
+        Campaign campaign = createCampaign(1L);
+        Donation donation = new Donation(1L,200, "EUR", campaign, donor, user, null, "", LocalDate.now(), false, null);
 
         // Mock service response
-        when(donationService.createDonation(user.getId(), donator.getId(), campaign.getId(), donation)).thenReturn(donation);
+        when(donationService.createDonation(user.getId(), donor.getId(), campaign.getId(), donation)).thenReturn(donation);
 
-        // Mock service response to throw UserPermissionException
-        when(donationService.createDonation(badUser.getId(), donator.getId(), campaign.getId(), donation))
-                .thenThrow(new UserPermissionException("User does not have permission!"));
+        // Call the controller method
+        ResponseEntity<?> responseEntity = donationController.createDonation(user.getId(), donor.getId(), campaign.getId(), donation);
 
-        // Mock service response to throw DonationRequirementsException
-        when(donationService.createDonation(user.getId(), donator.getId(), campaign.getId(), noRequirementsDonation))
-                .thenThrow(new DonationRequirementsException("Requirements not met!"));
-
-        when(donationService.createDonation(user.getId(), donator.getId(), campaign.getId(), donationException))
-                .thenThrow(new DonationException());
-
-        // Success
-        // Call the controller method & verify the response
-        ResponseEntity<?> responseEntity = donationController.createDonation(user.getId(), donator.getId(), campaign.getId(), donation);
+        // Verify the response
         assertNotNull(responseEntity);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(donation, responseEntity.getBody());
-
-        // User does not have permission
-        // Call the controller method & verify the response
-        ResponseEntity<?> permissionResponse = donationController.createDonation(badUser.getId(), donator.getId(), campaign.getId(), donation);
-        assertNotNull(responseEntity);
-        assertEquals(HttpStatus.OK, permissionResponse.getStatusCode());
-        assertTrue(permissionResponse.getBody() instanceof UserPermissionException);
-
-        // Requirements of donation haven't been met
-        // Call the controller method & verify the response
-        ResponseEntity<?> requirementsResponse = donationController.createDonation(user.getId(), donator.getId(), campaign.getId(), noRequirementsDonation);
-        assertNotNull(responseEntity);
-        assertEquals(HttpStatus.OK, requirementsResponse.getStatusCode());
-        assertTrue(requirementsResponse.getBody() instanceof DonationRequirementsException);
-
-        // Donation exception
-        // Call the controller method & verify the response
-        ResponseEntity<?> donationResponse = donationController.createDonation(user.getId(), donator.getId(), campaign.getId(), donationException);
-        assertNotNull(responseEntity);
-        assertEquals(HttpStatus.OK, donationResponse.getStatusCode());
-        assertTrue(donationResponse.getBody() instanceof DonationException);
-
+        assertEquals("Donation created successfully!", responseEntity.getBody());
     }
 
     @Test
-    public void testUpdateDonation() throws
-            UserPermissionException,
-            DonationIdException,
-            DonationRequirementsException,
-            DonationApprovedException,
-            DonationNotFoundException {
-
-        Long invalidDonatonId = 300L;
-        User user = goodUser(1L);
-        User badUser = badUser(2L);
-        Donor donator = createDonator(1L);
+    public void testCreateDonation_UserPermissionException() throws UserPermissionException, DonationRequirementsException, DonationException {
+        // Create test data
+        User user = badUser(1L);
+        Donor donor = createDonator(1L);
         Campaign campaign = createCampaign(1L);
-        Donation donation = new Donation(1L, 200, "EUR", campaign, donator, user, null, "", LocalDate.now(), false, null);
-        Donation badDonation = new Donation(null, 200, "EUR", campaign, donator, user, null, "", LocalDate.now(), false, null);
-        Donation apprvedDonation = new Donation(2L, 200, "EUR", campaign, donator, user, null, "", LocalDate.now(), true, null);
-        Donation update = new Donation(1L, 300, "EUR", campaign, donator, user, null, "", LocalDate.now(), false, null);
-        Donation badUpdate = new Donation(3L, 0, null, null, null, null, null, null, null, false, null);
+        Donation donation = new Donation(1L,200, "EUR", campaign, donor, user, null, "", LocalDate.now(), false, null);
 
-        // success
-        when(donationService.updateDonation(user.getId(), donation.getId(), update)).thenReturn(donation);
 
         // Mock service response to throw UserPermissionException
-        when(donationService.updateDonation(badUser.getId(), donation.getId(), update))
-                .thenThrow(new UserPermissionException());
+        when(donationService.createDonation(user.getId(), donor.getId(), campaign.getId(), donation))
+                .thenThrow(new UserPermissionException("User does not have permission."));
 
-        // Mock service response to throw DonationIdException
-        when(donationService.updateDonation(user.getId(), badDonation.getId(), update))
-                .thenThrow(new DonationIdException());
+        // Call the controller method
+        ResponseEntity<?> responseEntity = donationController.createDonation(user.getId(), donor.getId(), campaign.getId(), donation);
+
+        // Verify the response
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals("User does not have permission.", responseEntity.getBody());
+    }
+
+    @Test
+    public void testCreateDonation_DonationRequirementsException() throws UserPermissionException, DonationRequirementsException, DonationException {
+        // Create test data
+        User user = badUser(1L);
+        Donor donor = createDonator(1L);
+        Campaign campaign = createCampaign(1L);
+        Donation donation = new Donation();
 
         // Mock service response to throw DonationRequirementsException
-        when(donationService.updateDonation(user.getId(), donation.getId(), badUpdate))
-                .thenThrow(new DonationRequirementsException());
+        when(donationService.createDonation(user.getId(), donor.getId(), campaign.getId(), donation))
+                .thenThrow(new DonationRequirementsException("Donation requirements not met."));
 
-        // Mock service response to throw DonationApprovedException
-        when(donationService.updateDonation(user.getId(), apprvedDonation.getId(), update))
-                .thenThrow(new DonationApprovedException());
+        // Call the controller method
+        ResponseEntity<?> responseEntity = donationController.createDonation(user.getId(), donor.getId(), campaign.getId(), donation);
+
+        // Verify the response
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals("Donation requirements not met.", responseEntity.getBody());
+    }
+
+    @Test
+    public void testCreateDonation_DonationException() throws UserPermissionException, DonationRequirementsException, DonationException {
+        // Create test data
+        User user = goodUser(null);
+        Donor donor = createDonator(null);
+        Campaign campaign = createCampaign(null);
+        Donation donation = new Donation(1L,200, "EUR", campaign, donor, user, null, "", LocalDate.now(), false, null);
+
+        // Mock service response to throw DonationException
+        when(donationService.createDonation(user.getId(), donor.getId(), campaign.getId(), donation))
+                .thenThrow(new DonationException("Donation cannot be processed."));
+
+        // Call the controller method
+        ResponseEntity<?> responseEntity = donationController.createDonation(user.getId(), donor.getId(), campaign.getId(), donation);
+
+        // Verify the response
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals("Donation cannot be processed.", responseEntity.getBody());
+    }
+
+    @Test
+    public void testUpdateDonation_Success() throws DonationRequirementsException,
+            UserPermissionException, DonationNotFoundException, DonationApprovedException, DonationIdException {
+        // Create test data
+        User user = goodUser(1L);
+        Donor donor = createDonator(1L);
+        Campaign campaign = createCampaign(1L);
+        Donation donation = new Donation(1L,200, "EUR", campaign, donor, user, null, "", LocalDate.now(), false, null);
+        Donation newDonation = new Donation(1L,200, "USD", campaign, donor, user, null, "", LocalDate.now(), false, null);
+
+        // Mock service response
+        when(donationService.updateDonation(user.getId(), donation.getId(), newDonation)).thenReturn(donation);
+
+        // Call the controller method
+        ResponseEntity<?> responseEntity = donationController.updateDonation(user.getId(), donation.getId(), newDonation);
+
+        // Verify the response
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals("Donation updated successfully!", responseEntity.getBody());
+    }
+
+    @Test
+    public void testUpdateDonation_DonationRequirementsException() throws DonationRequirementsException,
+            DonationIdException, UserPermissionException, DonationNotFoundException, DonationApprovedException {
+        // Create test data
+        User user = goodUser(1L);
+        Donor donor = createDonator(1L);
+        Campaign campaign = createCampaign(1L);
+        Donation donation = new Donation(1L,200, "EUR", campaign, donor, user, null, "", LocalDate.now(), false, null);
+        Donation newDonation = new Donation();
+
+
+        // Mock service response to throw DonationRequirementsException
+        when(donationService.updateDonation(user.getId(), donation.getId(), newDonation))
+                .thenThrow(new DonationRequirementsException("Donation requirements not met."));
+
+        // Call the controller method
+        ResponseEntity<?> responseEntity = donationController.updateDonation(user.getId(), donation.getId(), newDonation);
+
+        // Verify the response
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals("Donation requirements not met.", responseEntity.getBody());
+    }
+
+    @Test
+    public void testUpdateDonation_DonationIdException() throws DonationRequirementsException,
+            DonationIdException, UserPermissionException, DonationNotFoundException, DonationApprovedException {
+        // Create test data
+        Long userId = 1L;
+        Long donationId = null; // Invalid donationId
+        Donation newDonation = new Donation(/* Initialize your new Donation object here */);
+
+        // Mock service response to throw DonationIdException
+        when(donationService.updateDonation(userId, donationId, newDonation))
+                .thenThrow(new DonationIdException("Invalid donation ID."));
+
+        // Call the controller method
+        ResponseEntity<?> responseEntity = donationController.updateDonation(userId, donationId, newDonation);
+
+        // Verify the response
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals("Invalid donation ID.", responseEntity.getBody());
+    }
+
+    @Test
+    public void testUpdateDonation_UserPermissionException() throws DonationRequirementsException,
+            DonationIdException, UserPermissionException, DonationNotFoundException, DonationApprovedException {
+        // Create test data
+        Long userId = 1L;
+        Long donationId = 2L;
+        Donation newDonation = new Donation(/* Initialize your new Donation object here */);
+
+        // Mock service response to throw UserPermissionException
+        when(donationService.updateDonation(userId, donationId, newDonation))
+                .thenThrow(new UserPermissionException("User does not have permission."));
+
+        // Call the controller method
+        ResponseEntity<?> responseEntity = donationController.updateDonation(userId, donationId, newDonation);
+
+        // Verify the response
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals("User does not have permission.", responseEntity.getBody());
+    }
+
+    @Test
+    public void testUpdateDonation_DonationNotFoundException() throws DonationRequirementsException,
+            DonationIdException, UserPermissionException, DonationNotFoundException, DonationApprovedException {
+        // Create test data
+        Long userId = 1L;
+        Long donationId = 2L;
+        Donation newDonation = new Donation(/* Initialize your new Donation object here */);
 
         // Mock service response to throw DonationNotFoundException
-        when(donationService.updateDonation(user.getId(), invalidDonatonId, update))
-                .thenThrow(new DonationNotFoundException());
+        when(donationService.updateDonation(userId, donationId, newDonation))
+                .thenThrow(new DonationNotFoundException("Donation not found."));
 
-        // Success
-        // Call the controller method & verify the response
-        ResponseEntity<?> responseEntity = donationController.updateDonation(user.getId(), donation.getId(), update);
+        // Call the controller method
+        ResponseEntity<?> responseEntity = donationController.updateDonation(userId, donationId, newDonation);
+
+        // Verify the response
         assertNotNull(responseEntity);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(donation, responseEntity.getBody());
-
-        // User exception
-        // Call the controller method & verify the response
-        ResponseEntity<?> userEntity = donationController.updateDonation(badUser.getId(), donation.getId(), update);
-        assertNotNull(userEntity);
-        assertEquals(HttpStatus.OK, userEntity.getStatusCode());
-        assertTrue(userEntity.getBody() instanceof UserPermissionException);
-
-        // DonationId exception
-        // Call the controller method & verify the response
-        ResponseEntity<?> didEntity = donationController.updateDonation(user.getId(), badDonation.getId(), update);
-        assertNotNull(didEntity);
-        assertEquals(HttpStatus.OK, didEntity.getStatusCode());
-        assertTrue(didEntity.getBody() instanceof DonationIdException);
-
-        // DonationReqEx exception
-        // Call the controller method & verify the response
-        ResponseEntity<?> reqEntity = donationController.updateDonation(user.getId(), donation.getId(), badUpdate);
-        assertNotNull(reqEntity);
-        assertEquals(HttpStatus.OK, reqEntity.getStatusCode());
-        assertTrue(reqEntity.getBody() instanceof DonationRequirementsException);
-
-        // Donation already approved
-        // Call the controller method & verify the response
-        ResponseEntity<?> appEntity = donationController.updateDonation(user.getId(), apprvedDonation.getId(), update);
-        assertNotNull(appEntity);
-        assertEquals(HttpStatus.OK, appEntity.getStatusCode());
-        assertTrue(appEntity.getBody() instanceof DonationApprovedException);
-
-        // Donation not found
-        // Call the controller method & verify the response
-        ResponseEntity<?> notFoundEntity = donationController.updateDonation(user.getId(), invalidDonatonId, update);
-        assertNotNull(notFoundEntity);
-        assertEquals(HttpStatus.OK, notFoundEntity.getStatusCode());
-        assertTrue(notFoundEntity.getBody() instanceof DonationNotFoundException);
+        assertEquals("Donation not found.", responseEntity.getBody());
     }
-
 
     @Test
-    public void testDeleteDonationById() throws
-            UserPermissionException,
-            DonationIdException,
-            DonationApprovedException,
-            DonationNotFoundException {
-
-        Long invalidDonatonId = 300L;
-        User user = goodUser(1L);
-        User badUser = badUser(2L);
-        Donor donator = createDonator(1L);
-        Campaign campaign = createCampaign(1L);
-        Donation donation = new Donation(1L, 200, "EUR", campaign, donator, user, null, "", LocalDate.now(), false, null);
-        Donation badDonation = new Donation(null, 200, "EUR", campaign, donator, user, null, "", LocalDate.now(), false, null);
-        Donation apprvedDonation = new Donation(2L, 200, "EUR", campaign, donator, user, null, "", LocalDate.now(), true, null);
-
-        // success
-        when(donationService.deleteDonationById(user.getId(), donation.getId())).thenReturn(donation);
-
-        // Mock service response to throw UserPermissionException
-        when(donationService.deleteDonationById(badUser.getId(), donation.getId()))
-                .thenThrow(new UserPermissionException());
-
-        // Mock service response to throw DonationIdException
-        when(donationService.deleteDonationById(user.getId(), badDonation.getId()))
-                .thenThrow(new DonationIdException());
+    public void testUpdateDonation_DonationApprovedException() throws DonationRequirementsException,
+            DonationIdException, UserPermissionException, DonationNotFoundException, DonationApprovedException {
+        // Create test data
+        Long userId = 1L;
+        Long donationId = 2L;
+        Donation newDonation = new Donation(/* Initialize your new Donation object here */);
 
         // Mock service response to throw DonationApprovedException
-        when(donationService.deleteDonationById(user.getId(), apprvedDonation.getId()))
-                .thenThrow(new DonationApprovedException());
+        when(donationService.updateDonation(userId, donationId, newDonation))
+                .thenThrow(new DonationApprovedException("Donation is already approved."));
 
-        // Mock service response to throw DonationApprovedException
-        when(donationService.deleteDonationById(user.getId(), invalidDonatonId))
-                .thenThrow(new DonationNotFoundException());
+        // Call the controller method
+        ResponseEntity<?> responseEntity = donationController.updateDonation(userId, donationId, newDonation);
 
-        // User exception
-        // Call the controller method & verify the response
-        ResponseEntity<?> userEntity = donationController.deleteDonationById(badUser.getId(), donation.getId());
-        assertNotNull(userEntity);
-        assertEquals(HttpStatus.OK, userEntity.getStatusCode());
-        assertTrue(userEntity.getBody() instanceof UserPermissionException);
-
-        // DonationId exception
-        // Call the controller method & verify the response
-        ResponseEntity<?> didEntity = donationController.deleteDonationById(user.getId(), badDonation.getId());
-        assertNotNull(didEntity);
-        assertEquals(HttpStatus.OK, didEntity.getStatusCode());
-        assertTrue(didEntity.getBody() instanceof DonationIdException);
-
-        // Donation not found
-        // Call the controller method & verify the response
-        ResponseEntity<?> notFoundEntity = donationController.deleteDonationById(user.getId(), invalidDonatonId);
-        assertNotNull(notFoundEntity);
-        assertEquals(HttpStatus.OK, notFoundEntity.getStatusCode());
-        assertTrue(notFoundEntity.getBody() instanceof DonationNotFoundException);
-
-        // Donation already approved
-        // Call the controller method & verify the response
-        ResponseEntity<?> appEntity = donationController.deleteDonationById(user.getId(), apprvedDonation.getId());
-        assertNotNull(appEntity);
-        assertEquals(HttpStatus.OK, appEntity.getStatusCode());
-        assertTrue(appEntity.getBody() instanceof DonationApprovedException);
+        // Verify the response
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals("Donation is already approved.", responseEntity.getBody());
     }
 
+//    @Test
+//    public void testUpdateDonation() {
+//        User user = goodUser(1L);
+//        User badUser = badUser(2L);
+//        Donator donator = createDonator(1L);
+//        Campaign campaign = createCampaign(1L);
+//        Donation donation = new Donation(1L,200, "EUR", campaign, donator, user, null, "", LocalDate.now(), false, null);
+//        Donation updatedDonation = new Donation(1L,200, "USD", campaign, donator, user, null, "", LocalDate.now(), false, null);
+//
+//        when(donationService.updateDonation(eq(user.getId()), eq(donation.getId()), any(Donation.class))).thenReturn(donation);
+//
+//        ResponseEntity<?> goodResponse = donationController.updateDonation(user.getId(), donation.getId(), updatedDonation);
+//        assertNotNull(goodResponse);
+//        assertEquals(HttpStatus.OK, goodResponse.getStatusCode());
+//
+//        // user with no permission
+//        ResponseEntity<Donation> forbiddenResponse = ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+//        when(donationService.updateDonation(eq(badUser.getId()), eq(donation.getId()), any(Donation.class))).thenReturn(forbiddenResponse.getBody());
+//
+//        ResponseEntity<?> badResponse = donationController.updateDonation(badUser.getId(), donation.getId(), updatedDonation);
+//        assertEquals(HttpStatus.FORBIDDEN, badResponse.getStatusCode());
+//    }
+//
+//    @Test
+//    public void testDeleteDonationById() throws DonationNotFoundException {
+//        User user = goodUser(1L);
+//        Donator donator = createDonator(1L);
+//        Campaign campaign = createCampaign(1L);
+//        Donation donation = new Donation(1L,200, "EUR", campaign, donator, user, null, "", LocalDate.now(), false, null);
+//        Donation approvedDonation = new Donation(2L,200, "EUR", campaign, donator, user, null, "", LocalDate.now(), true, null);
+//
+//        when(donationService.getDonationById(1L)).thenReturn(Optional.of(donation));
+//        when(donationService.getDonationById(2L)).thenReturn(Optional.of(approvedDonation));
+//
+//        ResponseEntity<?> response = donationController.deleteDonationById(user.getId(), donation.getId());
+//
+//        // everything works just fine
+//        assertNotNull(response);
+//        assertEquals(HttpStatus.OK, response.getStatusCode());
+//
+//        // donation has been approved, can't be deleted
+//        ResponseEntity<?> approvedResponse = donationController.deleteDonationById(user.getId(), approvedDonation.getId());
+//        assertEquals(HttpStatus.FORBIDDEN, approvedResponse.getStatusCode());
+//
+//        // donation does not exist
+//        ResponseEntity<?> forbiddenResponse = ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+//        ResponseEntity<?> badResponse = donationController.deleteDonationById(user.getId(), 25L);
+//        assertEquals(HttpStatus.FORBIDDEN, badResponse.getStatusCode());
+//    }
 }

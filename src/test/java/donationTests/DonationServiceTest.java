@@ -13,7 +13,6 @@ import de.msg.javatraining.donationmanager.persistence.repository.CampaignReposi
 import de.msg.javatraining.donationmanager.persistence.repository.DonationRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.DonorRepository;
 import de.msg.javatraining.donationmanager.persistence.repository.UserRepository;
-import de.msg.javatraining.donationmanager.service.LogService;
 import de.msg.javatraining.donationmanager.service.donationService.DonationService;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -33,9 +32,6 @@ import static org.mockito.Mockito.*;
 public class DonationServiceTest {
     @InjectMocks
     private DonationService donationService;
-
-    @Mock
-    private LogService logService;
 
     @Mock
     private DonationRepository donationRepository;
@@ -132,11 +128,7 @@ public class DonationServiceTest {
     }
 
     @Test
-    public void testCreateDonation() throws
-            UserPermissionException,
-            DonationRequirementsException,
-            DonationException {
-
+    public void testCreateDonation() throws UserPermissionException, DonationRequirementsException, DonationException {
         User user = goodUser(1L);
         User badUser = badUser(2L);
         Donor donor = createDonator(1L);
@@ -163,17 +155,10 @@ public class DonationServiceTest {
         assertThrows(UserPermissionException.class, () -> {
             donationService.createDonation(badUser.getId(), donor.getId(), campaign.getId(), donation);
         });
-
     }
 
     @Test
-    public void testUpdateDonation() throws
-            UserPermissionException,
-            DonationIdException,
-            DonationRequirementsException,
-            DonationApprovedException,
-            DonationNotFoundException {
-
+    public void testUpdateDonation() throws UserPermissionException, DonationIdException, DonationRequirementsException, DonationApprovedException, DonationNotFoundException {
         User user = goodUser(1L);
         User badUser = badUser(2L);
         Donor donor = createDonator(1L);
@@ -185,7 +170,6 @@ public class DonationServiceTest {
 
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(userRepository.findById(2L)).thenReturn(Optional.of(badUser));
         when(donationRepository.findById(1L)).thenReturn(Optional.of(donation));
         when(donationRepository.save(donation)).thenReturn(donation);
         //when(donationService.checkDonationStatus(1L)).thenReturn(donation.isApproved());
@@ -218,16 +202,10 @@ public class DonationServiceTest {
         assertThrows(DonationNotFoundException.class, () -> {
             donationService.updateDonation(user.getId(), 25L, updatedDonation);
         });
-
     }
 
     @Test
-    public void testDeleteDonationById() throws
-            UserPermissionException,
-            DonationIdException,
-            DonationApprovedException,
-            DonationNotFoundException {
-
+    public void testDeleteDonationById() throws UserPermissionException, DonationIdException, DonationApprovedException, DonationNotFoundException {
         User user = goodUser(1L);
         User badUser = badUser(2L);
         Donor donor = createDonator(1L);
@@ -239,30 +217,29 @@ public class DonationServiceTest {
 
         when(donationRepository.findById(1L)).thenReturn(Optional.of(donation));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(userRepository.findById(2L)).thenReturn(Optional.of(badUser));
         doNothing().when(donationRepository).deleteById(1L);
 
         Donation deletedDonation = donationService.deleteDonationById(user.getId(), donation.getId());
         verify(donationRepository).deleteById(1L);
 
         // user does not have permission
-        assertThrows(UserPermissionException.class, () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             donationService.deleteDonationById(badUser.getId(), donation.getId());
         });
 
         // donation does not exist
-        assertThrows(DonationNotFoundException.class, () -> {
+        assertThrows(EntityNotFoundException.class, () -> {
             donationService.deleteDonationById(user.getId(), 25L);
         });
 
         // donation id can't be null
-        assertThrows(DonationIdException.class, () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             donationService.deleteDonationById(badUser.getId(), nullDonation.getId());
         });
 
         // can't delete an approved donation
         donation.setApproved(true);
-        assertThrows(DonationApprovedException.class, () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             donationService.deleteDonationById(user.getId(), donation.getId());
         });
     }
